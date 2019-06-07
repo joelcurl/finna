@@ -1,56 +1,62 @@
+from visa import TransactionDb, VisaTransaction, Mcc
 
-
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine
-
-Base = declarative_base()
-
-class VisaTransaction(Base):
-    __tablename__ = 'transaction'
-    id = Column(Integer, primary_key=True)
-    date = Column(DateTime)
-    isDebit = Column(Boolean)
-    name = Column(String, nullable=True)
-    mcc = Column(Integer, ForeignKey('mcc.mcc'))
-    amount = Column(Integer)
-
-class Mcc(Base):
-    __tablename__ = 'mcc'
-    mcc = Column(Integer, primary_key=True)
-    description = Column(String)
-
-engine = create_engine('sqlite:///cc.db')
-Base.metadata.create_all(engine)
-
-
+from decimal import Decimal
+from datetime import datetime
 from collections import namedtuple
-import csv
-
-Transaction = namedtuple('Transaction', 'date isDebit name mcc amount')
+from csv import DictReader
+from memoized_property import memoized_property
 
 class ElanStatementReader:
-    elan_transactions = []
+    Transaction = namedtuple('Transaction', 'date isDebit name mcc amount id')
+    transactions = []
 
     def __init__(self, csv_str):
         csv_iter = csv_str.split('\n')
-        self.reader = csv.DictReader(csv_iter)
-        self.Transaction = namedtuple('ElanTransaction', self.reader.fieldnames)
+        self.reader = DictReader(csv_iter)
+        self.ElanTransaction = namedtuple('ElanTransaction', self.reader.fieldnames)
         for row in self.reader:
-            self.elan_transactions.append(self.Transaction(**row))
+            self.transactions.append(self.ElanTransaction(**row))
 
-    def transactions(self):
+    @memoized_property
+    def elan_transactions(self):
         ts = []
-        for t in self.elan_transactions:
-            mcc = int(t.Memo.split(';')[1])
+        for t in self.transactions:
+            date = datetime.strptime(t.Date, '%m/%d/%Y')
             isDebit = t.Transaction == 'DEBIT'
-            ts.append(Transaction(t.Date, isDebit, t.Name, mcc, t.Amount))
+            memo = t.Memo.split(';')
+            mcc = int(memo[1])
+            amount = Decimal(t.Amount)
+            try:
+                id = str(int(memo[0]))
+            except ValueError:
+                id = '{} ${}'.format(date, amount) # use date and amount as id if 'INTERNET' payment or id is otherwise missing
+            ts.append(self.Transaction(date, isDebit, t.Name, mcc, amount, id))
         return ts
 
+    @memoized_property
+    def visa_transactions(self):
+        return [VisaTransaction(**dict(t._asdict())) for t in self.elan_transactions]
 
-reader = None
+
+class MccReader:
+    def __init__(self, csv_str):
+        csv_iter = csv_str.split('\n')
+        self.reader = DictReader(csv_iter)
+
+    @memoized_property
+    def codes(self):
+        return [Mcc(mcc = int(row['mcc']), description = row['edited_description']) for row in self.reader]
+
+cc_reader = None
 with open('statements/download.csv') as f:
-    reader = ElanStatementReader(f.read())
+    cc_reader = ElanStatementReader(f.read())
+mcc_reader = None
+with open('mcc-codes/mcc_codes.csv') as f:
+    mcc_reader = MccReader(f.read())
+
+db = TransactionDb('sqlite:///cc.db')
+db.add_many(cc_reader.visa_transactions)
+db.add_many(mcc_reader.codes)
 
 import pdb; pdb.set_trace()
 print('')

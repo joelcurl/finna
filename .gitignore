@@ -1,2 +1,3 @@
 cc/statements/**
+**/__pycache__/**
 *.db
