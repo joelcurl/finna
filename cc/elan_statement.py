@@ -47,16 +47,3 @@ class MccReader:
     def codes(self):
         return [Mcc(mcc = int(row['mcc']), description = row['edited_description']) for row in self.reader]
 
-cc_reader = None
-with open('statements/download.csv') as f:
-    cc_reader = ElanStatementReader(f.read())
-mcc_reader = None
-with open('mcc-codes/mcc_codes.csv') as f:
-    mcc_reader = MccReader(f.read())
-
-db = TransactionDb('sqlite:///cc.db')
-db.add_many(cc_reader.visa_transactions)
-db.add_many(mcc_reader.codes)
-
-import pdb; pdb.set_trace()
-print('')

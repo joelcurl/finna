@@ -1,9 +1,15 @@
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
+from singleton_decorator import singleton
 
-Base = declarative_base()
+#DeclBase = declarative_base()
+
+@as_declarative()
+class Base:
+    def to_dict(self):
+        return {k:v for k,v in self.__dict__.items() if k[0] != '_'}
 
 class VisaTransaction(Base):
     __tablename__ = 'transactions'
@@ -22,8 +28,9 @@ class Mcc(Base):
 engine = create_engine('sqlite:///cc.db')
 Base.metadata.create_all(engine)
 
+@singleton
 class TransactionDb:
-    def __init__(self, conn_str):
+    def connect(self, conn_str):
         self.engine = create_engine(conn_str)
         Base.metadata.create_all(self.engine)
         self.session = sessionmaker(self.engine)()
