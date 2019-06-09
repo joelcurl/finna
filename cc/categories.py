@@ -1,4 +1,4 @@
-from visa import VisaTransaction, Mcc, TransactionDb
+from .visa import VisaTransaction, Mcc, TransactionDb
 from memoized_property import memoized_property
 
 class MccCategory:
