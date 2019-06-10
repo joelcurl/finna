@@ -1,5 +1,16 @@
 from .visa import VisaTransaction, Mcc, TransactionDb
+import sys, inspect
+from decimal import Decimal
 from memoized_property import memoized_property
+
+# return all category classes mentioned here, less special ones like MccCategory and SuperCategory
+def categories():
+    do_not_return_these = [MccCategory, SuperCategory]
+    is_class_member = lambda member: inspect.isclass(member) and member.__module__ == __name__
+    cat_classes = inspect.getmembers(sys.modules[__name__], is_class_member)
+    for remove_this in do_not_return_these:
+        cat_classes.remove((remove_this.__name__, remove_this))
+    return {cat_tuple[0]: cat_tuple[1] for cat_tuple in cat_classes}
 
 class MccCategory:
     def __init__(self, mcc):
@@ -18,7 +29,11 @@ class MccCategory:
         if matches:
             return {'transactions': [t.to_dict() for t in matches], 'total': total}
         else:
-            return None
+            return {}
+
+    @property
+    def total(self):
+        return self.to_dict().get('total', Decimal(0))
 
     @property
     def db_session(self):
@@ -40,6 +55,13 @@ class SuperCategory:
             if d:
                 matches[t.description] = d
         return matches
+
+    @property
+    def total(self):
+        _total = Decimal(0)
+        for t in self.types:
+            _total += t.total
+        return _total
 
 class Food(SuperCategory):
     types = [
@@ -118,12 +140,6 @@ class Luxuries(SuperCategory):
     types = [
             MccCategory(5921),
             MccCategory(5993),
-            ]
-
-class Discretionary(SuperCategory):
-    types = [
-            Entertainment(),
-            Luxuries(),
             ]
 
 class Other(SuperCategory):

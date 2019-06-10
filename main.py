@@ -1,31 +1,27 @@
-from cc.visa import TransactionDb
-from cc.elan_statement import ElanStatementReader, MccReader
+from cc.visa import TransactionDb, MccReader
+from cc.elan_statement import ElanStatementReader
+from cc.statement import CcStatement
 from cc import categories
 from paystubs.reader import AcmePaystubReader
 from paystubs.wages import AcmePaystub
-
-cc_reader = None
-with open('cc/statements/download.csv') as f:
-    cc_reader = ElanStatementReader(f.read())
-mcc_reader = None
-with open('cc/mcc-codes/mcc_codes.csv') as f:
-    mcc_reader = MccReader(f.read())
+from statements.cash_flow_statement import CashFlowStatement
 
 db = TransactionDb()
-db.connect('sqlite:///cc.db')
-db.add_many(cc_reader.visa_transactions)
-db.add_many(mcc_reader.codes)
-
-f = categories.Food()
-d = f.to_dict()
-dis = categories.Discretionary()
-dis.to_dict()
-o = categories.Other()
-
-paystub_reader = None
-with open('paystubs/statements/Paystub_201912.pdf', 'rb') as f:
+db.connect('sqlite:///cc/cc.db') # maybe this should be in-mem?
+cc_statement = None
+with open('cc/mcc-codes/mcc_codes.csv') as mcc:
+    with open('cc/input/download.csv') as cc:
+        cc_reader = ElanStatementReader(cc.read())
+        mcc_reader = MccReader(mcc.read())
+        cc_statement = CcStatement(cc_reader, mcc_reader)
+paystub = None
+with open('paystubs/input/Paystub_201912.pdf', 'rb') as f:
     paystub_reader = AcmePaystubReader(f)
-paystub = AcmePaystub(paystub_reader.text)
+    paystub = AcmePaystub(paystub_reader.text)
+
+cfs = CashFlowStatement('beg time', 'end time', 0)
+cfs.add_paystub(paystub.current)
+cfs.add_cc_statement(cc_statement)
 
 import pdb; pdb.set_trace()
 print('')

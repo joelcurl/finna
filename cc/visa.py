@@ -3,8 +3,17 @@ from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from singleton_decorator import singleton
+from memoized_property import memoized_property
+from csv import DictReader
 
-#DeclBase = declarative_base()
+class MccReader:
+    def __init__(self, csv_str):
+        csv_iter = csv_str.split('\n')
+        self.reader = DictReader(csv_iter)
+
+    @memoized_property
+    def codes(self):
+        return [Mcc(mcc = int(row['mcc']), description = row['edited_description']) for row in self.reader]
 
 @as_declarative()
 class Base:

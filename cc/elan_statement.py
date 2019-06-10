@@ -2,8 +2,8 @@ from .visa import TransactionDb, VisaTransaction, Mcc
 from decimal import Decimal
 from datetime import datetime
 from collections import namedtuple
-from csv import DictReader
 from memoized_property import memoized_property
+from csv import DictReader
 
 class ElanStatementReader:
     Transaction = namedtuple('Transaction', 'date isDebit name mcc amount id')
@@ -37,12 +37,4 @@ class ElanStatementReader:
         return [VisaTransaction(**dict(t._asdict())) for t in self.elan_transactions]
 
 
-class MccReader:
-    def __init__(self, csv_str):
-        csv_iter = csv_str.split('\n')
-        self.reader = DictReader(csv_iter)
-
-    @memoized_property
-    def codes(self):
-        return [Mcc(mcc = int(row['mcc']), description = row['edited_description']) for row in self.reader]
 
