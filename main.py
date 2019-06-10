@@ -23,5 +23,6 @@ cfs = CashFlowStatement('beg time', 'end time', 0)
 cfs.add_paystub(paystub.current)
 cfs.add_cc_statement(cc_statement)
 
+print(cfs.to_table())
 import pdb; pdb.set_trace()
 print('')
