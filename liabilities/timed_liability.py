@@ -17,6 +17,8 @@ class TimedLiability:
         now = date.fromisoformat(now)
         if now > self.end_date:
             return timedelta(0)
+        if now < self.start_date:
+            return self.end_date - self.start_date
         return self.end_date - now
 
     def ratio_remaining(self, now):

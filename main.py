@@ -7,7 +7,7 @@ from paystubs.wages import AcmePaystub
 from statements.cash_flow_statement import CashFlowStatement
 
 db = TransactionDb()
-db.connect('sqlite:///cc/cc.db') # maybe this should be in-mem?
+db.connect('sqlite:///cc/cc.db') # todo maybe this should be in-mem?
 cc_statement = None
 with open('cc/mcc-codes/mcc_codes.csv') as mcc:
     with open('cc/input/download.csv') as cc:

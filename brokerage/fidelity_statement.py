@@ -49,13 +49,12 @@ class FidelityStatement(FidelityAccount):
         self.SecurityPosition = recordclass('SecurityPosition', fields)
 
         positions = []
-        next(self.reader) # skip header
+        next(self.reader) # skip header # todo really skip?
         for row in self.reader:
             row = {FidelityStatement.translate_field(key): value for key, value in row.items()}
             positions.append(self.SecurityPosition(**row))
         super().__init__(positions)
         self.accounts =  {account_name: FidelityAccount(self.account_positions(account_name)) for account_name in ACCOUNTS.keys()}
-        import pdb; pdb.set_trace()
 
     def account_positions(self, account_name):
         return [position for position in self.positions if position.Account_Name_Number == ACCOUNTS[account_name]]
