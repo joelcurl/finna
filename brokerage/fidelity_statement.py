@@ -49,7 +49,6 @@ class FidelityStatement(FidelityAccount):
         self.SecurityPosition = recordclass('SecurityPosition', fields)
 
         positions = []
-        next(self.reader) # skip header # todo really skip?
         for row in self.reader:
             row = {FidelityStatement.translate_field(key): value for key, value in row.items()}
             positions.append(self.SecurityPosition(**row))
