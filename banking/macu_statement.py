@@ -15,6 +15,7 @@ class MacuStatement:
             self.transactions.append(self.MacuTransaction(**row))
         self._calc_balances()
 
+    @property
     def balance(self):
         return self.transactions[0].Balance if len(self.transactions) > 0 else Decimal(0)
 
@@ -28,4 +29,4 @@ class MacuStatement:
 
 #with open('input/ExportedTransactions.csv') as f:
 #    ms = MacuStatement(f.read())
-#    print(ms.balance())
+#    print(ms.balance)
