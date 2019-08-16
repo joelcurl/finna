@@ -1,7 +1,6 @@
 from cc.visa import TransactionDb, MccReader
 from cc.elan_statement import ElanStatementReader
 from cc.statement import CcStatement
-from cc import categories
 from paystubs.reader import AcmePaystubReader
 from paystubs.wages import AcmePaystub
 from statements.cash_flow_statement import CashFlowStatement
@@ -24,5 +23,4 @@ cfs.add_paystub(paystub.current)
 cfs.add_cc_statement(cc_statement)
 
 print(cfs.to_table())
-import pdb; pdb.set_trace()
-print('')
+
