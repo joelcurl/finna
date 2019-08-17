@@ -42,6 +42,6 @@ with open('cc/mcc-codes/mcc_codes.csv') as mcc:
     with open('cc/input/download.csv') as cc:
         bs.add_cc_statement(CcStatement(ElanStatementReader(cc.read()), MccReader(mcc.read())))
 
-bs.add_lease_liability(concept_lease)
+bs.add_timed_liability(concept_lease)
 
 print(bs.to_table())

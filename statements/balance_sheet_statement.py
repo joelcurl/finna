@@ -48,7 +48,7 @@ class BalanceSheetStatement:
     def add_cc_statement(self, statement):
         self.liabilities.current.credit += statement.total
 
-    def add_lease_liability(self, lease):
+    def add_timed_liability(self, lease):
         self.liabilities.current.leases += -lease.amount_remaining(self.now)
 
     @property

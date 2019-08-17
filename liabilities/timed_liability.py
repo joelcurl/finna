@@ -21,10 +21,20 @@ class TimedLiability:
             return self.end_date - self.start_date
         return self.end_date - now
 
+    def ratio_from(self, start, end):
+        start = date.fromisoformat(start)
+        end = date.fromisoformat(end)
+        if start > end:
+            raise ValueError(f'start {start} is past end {end}')
+        return Decimal((self.remaining(start.isoformat()) - self.remaining(end.isoformat())) / self.length)
+
     def ratio_remaining(self, now):
-        return self.remaining(now) / self.length
+        return self.ratio_from(now, self.end_date.isoformat())
+
+    def amount_from(self, start_date, end_date):
+        return self.amount * self.ratio_from(start_date, end_date)
 
     def amount_remaining(self, end_date):
-        return self.amount * Decimal(self.ratio_remaining(end_date))
+        return self.amount * self.ratio_remaining(end_date)
 
 concept_lease = TimedLiability('2019-07-20', '2020-01-19', 999.00 * 6)
