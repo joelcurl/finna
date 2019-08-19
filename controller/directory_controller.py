@@ -93,6 +93,7 @@ class DirectoryController:
                 paystub = self.factory.paystub(f)
                 self.cash_flow_statement.add_paystub(paystub)
                 self.balance_sheet.add_paystub(paystub)
+                self.income_statement.add_paystub(paystub)
 
     def _discover_properties(self):
         for fixed_asset in self.dir_structure.properties:
@@ -106,8 +107,11 @@ class DirectoryController:
                     cc_statement = self.factory.cc(cc.read(), mcc)
                     self.cash_flow_statement.add_cc_statement(cc_statement)
                     self.balance_sheet.add_cc_statement(cc_statement)
+                    self.income_statement.add_cc_statement(cc_statement)
 
     def _discover_liabilities(self):
         for liability in self.dir_structure.liabilities:
+            self.cash_flow_statement.add_timed_liability(liability)
             self.balance_sheet.add_timed_liability(liability)
+            self.income_statement.add_timed_liability(liability)
 

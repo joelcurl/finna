@@ -1,5 +1,6 @@
 from .util import is_current_date
 from recordclass import recordclass
+from datetime import date
 from decimal import *
 from tabulate import tabulate
 from taxes.tax import SingleTax as Tax
@@ -22,7 +23,7 @@ class BalanceSheetStatement:
     cc_dates = {}
 
     def __init__(self, now):
-        self.now = now
+        self.now = date.fromisoformat(now)
         self.assets = self.Assets(
                 self.CurrentAssets(Decimal(0), {}),
                 self.NoncurrentAssets({}, self.TaxAssets(Decimal(0), Decimal(0)), Decimal(0))

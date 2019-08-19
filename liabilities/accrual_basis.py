@@ -9,8 +9,6 @@ class AccrualBasis:
         self.basis_per_day = basis_per_day
 
     def accrued(self, then, now):
-        then = date.fromisoformat(then)
-        now = date.fromisoformat(now)
         timediff = now - then
         amount_accrued = self.amount * self.basis_per_day * timediff.days
         return amount_accrued if amount_accrued > 0 else Decimal(0)

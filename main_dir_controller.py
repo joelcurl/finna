@@ -2,9 +2,12 @@ from controller.directory_controller import DirectoryController
 from statements.balance_sheet_statement import BalanceSheetStatement
 from statements.income_statement import IncomeStatement
 from statements.cash_flow_statement import CashFlowStatement
-from datetime import datetime
+from datetime import date
+import decimal
 
-now = datetime.today().date()
+decimal.getcontext().prec = 6 # to avoid printing too many decimal places
+
+now = date.fromisoformat('2019-08-18')
 then = now.replace(month=now.month-3)
 now = now.isoformat()
 then = then.isoformat()
@@ -16,5 +19,6 @@ cash_flow_statement = CashFlowStatement(then, now)
 controller = DirectoryController(balance_sheet, income_statement, cash_flow_statement)
 
 print(cash_flow_statement.to_table())
-#print(balance_sheet.to_table())
-#print(income_statement.to_table())
+print(balance_sheet.to_table())
+print(income_statement.to_table())
+

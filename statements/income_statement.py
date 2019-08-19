@@ -1,10 +1,11 @@
-from recordclass import recordclass
+from .util import is_date_between
+from cc.categories import *
 from decimal import Decimal
 from taxes.tax import SingleTax as Tax
 from liabilities.accrual_basis import SemesterAccrualBasis
+from recordclass import recordclass
+from datetime import date
 from tabulate import tabulate
-
-# todo o_and_a need cc statements, res. lease
 
 class IncomeStatement:
     Revenue = recordclass('Revenue', 'salaries bonuses capital_gains')
@@ -12,9 +13,11 @@ class IncomeStatement:
     ItExpenses = recordclass('ItExpenses', 'interest taxes')
     Expenses = recordclass('Expenses', 'ebit it')
 
+    cc_transactions = {}
+
     def __init__(self, beginning, ending):
-        self.beginning = beginning
-        self.ending = ending
+        self.beginning = date.fromisoformat(beginning)
+        self.ending = date.fromisoformat(ending)
 
         self.revenue = self.Revenue(Decimal(0), Decimal(0), Decimal(0))
         self.expenses = self.Expenses(
@@ -23,23 +26,38 @@ class IncomeStatement:
         )
 
     def add_paystub(self, paystub):
-        self.revenue.salaries += sum(paystub.current.earnings.wages.values())
-        self.revenue.bonuses += sum(paystub.current.earnings.bonus.values())
-        self.expenses.ebit.o_and_a += -sum(paystub.current.deductions.total.values())
-        self.expenses.it.taxes += -sum(paystub.current.taxes.total.values())
+        pay_period = paystub.pay_period
+        paystub = paystub.current
+        if not is_date_between(date=pay_period.end, start=self.beginning, end=self.ending):
+            return
+        self.revenue.salaries += sum(paystub.earnings.wages.values())
+        self.revenue.bonuses += sum(paystub.earnings.bonus.values())
+        self.expenses.ebit.o_and_a += -sum(paystub.deductions.total.values())
+        self.expenses.it.taxes += -sum(paystub.taxes.total.values())
 
     def add_timed_liability(self, liability):
         self.expenses.ebit.o_and_a += -liability.amount_from(self.beginning, self.ending)
 
     def add_cc_statement(self, statement):
-        self.expenses.ebit.o_and_a += statement.category('Automotive').total
-        self.expenses.ebit.education += -SemesterAccrualBasis(statement.category('Education').total).accrued(self.beginning, self.ending)
-        self.expenses.ebit.discretionary += statement.category('Entertainment').total
-        self.expenses.ebit.o_and_a += statement.category('Food').total
-        self.expenses.ebit.discretionary += statement.category('Luxuries').total
-        self.expenses.ebit.o_and_a += statement.category('Medical').total
-        self.expenses.ebit.o_and_a += statement.category('Utilities').total
-        self.expenses.ebit.discretionary += statement.category('Other').total
+        for transaction in statement.transactions:
+            if is_date_between(transaction.date, self.beginning, self.ending) and transaction.id not in self.cc_transactions:
+                self.cc_transactions[transaction.id] = transaction
+                if transaction.in_category(Automotive):
+                    self.expenses.ebit.o_and_a += transaction.amount
+                elif transaction.in_category(Education):
+                    self.expenses.ebit.education += -SemesterAccrualBasis(transaction.amount).accrued(self.beginning, self.ending)
+                elif transaction.in_category(Entertainment):
+                    self.expenses.ebit.discretionary += transaction.amount
+                elif transaction.in_category(Food):
+                    self.expenses.ebit.o_and_a += transaction.amount
+                elif transaction.in_category(Luxuries):
+                    self.expenses.ebit.discretionary += transaction.amount
+                elif transaction.in_category(Medical):
+                    self.expenses.ebit.o_and_a += transaction.amount
+                elif transaction.in_category(Utilities):
+                    self.expenses.ebit.o_and_a += transaction.amount
+                else:
+                    self.expenses.ebit.discretionary += transaction.amount
 
     @property
     def revenue_total(self):
@@ -59,7 +77,7 @@ class IncomeStatement:
 
     @property
     def operating_income(self):
-        return self.revenue_total - ebit_expenses
+        return self.revenue_total + self.ebit_expenses # expenses are negative, so really revenue - expenses
 
     @property
     def net_income(self):
@@ -93,7 +111,7 @@ class IncomeStatement:
                     ['Total', self.ebit_expenses],
                 ],
 
-                [['Operating Income (EBIT)', self.ebit_expenses]],
+                [['Operating Income (EBIT)', self.operating_income]],
 
                 [
                     ['Interest Expense', self.expenses.it.interest],

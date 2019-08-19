@@ -1,9 +1,10 @@
 from .util import is_date_between
+from cc.categories import Education
 from recordclass import recordclass
 from decimal import Decimal
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from tabulate import tabulate
-from cc.categories import Education
 
 class CashFlowStatement:
     OperatingActivities = recordclass('OperatingActivities', 'salaries bonuses deductions expenses taxes')
@@ -29,6 +30,11 @@ class CashFlowStatement:
         self.operating.bonuses += sum(paystub.earnings.bonus.values())
         self.operating.deductions -= sum(paystub.deductions.total.values())
         self.operating.taxes -= sum(paystub.taxes.total.values())
+
+    def add_timed_liability(self, liability):
+        # assume monthly payments
+        months = relativedelta(self.ending, self.beginning).months
+        self.operating.expenses += months * -liability.monthly_amount
 
     def add_cc_statement(self, statement):
         for transaction in statement.transactions:
