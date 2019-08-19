@@ -15,3 +15,6 @@ cash_flow_statement = CashFlowStatement(then, now, 0) # todo orig_cash_balance =
 
 controller = DirectoryController(balance_sheet, income_statement, cash_flow_statement)
 
+print(cash_flow_statement.to_table())
+#print(balance_sheet.to_table())
+#print(income_statement.to_table())

@@ -1,3 +1,4 @@
+from .util import is_current_date
 from recordclass import recordclass
 from decimal import *
 from tabulate import tabulate
@@ -13,8 +14,13 @@ class BalanceSheetStatement:
 
     TaxAssets = recordclass('TaxAssets', 'federal_withheld state_withheld')
     TaxLiabilities = recordclass('TaxLiabilities', 'federal_tax_ytd state_tax_ytd')
-    ordinary_taxable_income = Decimal(0)
+    miscellaneous_income = Decimal(0)
     preferred_taxable_income = Decimal(0)
+
+    paystub_dates = {}
+    paystub_taxable = {}
+
+    cc_dates = {}
 
     def __init__(self, now):
         self.now = now
@@ -23,7 +29,7 @@ class BalanceSheetStatement:
                 self.NoncurrentAssets({}, self.TaxAssets(Decimal(0), Decimal(0)), Decimal(0))
         )
         self.liabilities = self.Liabilities(
-                self.CurrentLiabilities(Decimal(0), Decimal(0)),
+                self.CurrentLiabilities({}, Decimal(0)),
                 self.NoncurrentLiabilities(self.TaxLiabilities(Decimal(0), Decimal(0)), Decimal(0))
         )
 
@@ -37,16 +43,19 @@ class BalanceSheetStatement:
         self.assets.noncurrent.brokerage[name] = statement.total
 
     def add_paystub(self, paystub):
+        if not is_current_date(key=paystub.employer, past_dates=self.paystub_dates, today=paystub.pay_period.end):
+            return
         self.assets.noncurrent.taxes.federal_withheld = sum(paystub.ytd.taxes.fed_withholding.values())
         self.assets.noncurrent.taxes.state_withheld = sum(paystub.ytd.taxes.state_withholding.values())
-        # todo liabilities somehow maybe use paystub.ytd.taxes.taxable_wages
-        self.ordinary_taxable_income += sum(paystub.ytd.taxes.taxable_wages.values())
+        self.paystub_taxable[paystub.employer] = sum(paystub.ytd.taxes.taxable_wages.values())
 
     def add_fixed_asset(self, asset):
         self.assets.noncurrent.fixed += asset.mark_to_market()
 
     def add_cc_statement(self, statement):
-        self.liabilities.current.credit += statement.total
+        if not is_current_date(key=statement.creditor, past_dates=self.cc_dates, today=statement.end):
+            return
+        self.liabilities.current.credit[statement.creditor] = statement.total
 
     def add_timed_liability(self, lease):
         self.liabilities.current.leases += -lease.amount_remaining(self.now)
@@ -74,7 +83,7 @@ class BalanceSheetStatement:
     @property
     def current_liability_total(self):
         return sum([
-            self.liabilities.current.credit,
+            self.outstanding_credit,
             self.liabilities.current.leases,
         ])
 
@@ -85,6 +94,10 @@ class BalanceSheetStatement:
             self.liabilities.noncurrent.taxes.state_tax_ytd,
             self.liabilities.noncurrent.loans,
         ])
+
+    @property
+    def ordinary_taxable_income(self):
+        return sum(self.paystub_taxable.values()) + self.miscellaneous_income
 
     @property
     def federal_tax_burden(self):
@@ -105,6 +118,10 @@ class BalanceSheetStatement:
     @property
     def equity(self):
         return self.asset_total + self.liability_total # this is actually assets - liabilities, as liabilities are negative values
+
+    @property
+    def outstanding_credit(self):
+        return sum(self.liabilities.current.credit.values())
 
     def to_table(self):
         current_asset_table = [[f'Brokerage {account_name}', value] for account_name, value in self.assets.current.brokerage.items()]
@@ -134,7 +151,7 @@ class BalanceSheetStatement:
 
                 [
                     ['Current Liabilities', 'Amount'],
-                    ['Outstanding Credit', self.liabilities.current.credit],
+                    ['Outstanding Credit', self.outstanding_credit],
                     ['Leases', self.liabilities.current.leases],
                     ['Total', self.current_liability_total],
                 ],

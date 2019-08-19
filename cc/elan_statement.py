@@ -13,6 +13,7 @@ class ElanStatementReader:
         csv_iter = csv_str.split('\n')
         self.reader = DictReader(csv_iter)
         self.ElanTransaction = namedtuple('ElanTransaction', self.reader.fieldnames)
+        self.creditor = 'Elan'
         for row in self.reader:
             self.transactions.append(self.ElanTransaction(**row))
 
@@ -20,7 +21,7 @@ class ElanStatementReader:
     def elan_transactions(self):
         ts = []
         for t in self.transactions:
-            date = datetime.strptime(t.Date, '%m/%d/%Y')
+            date = datetime.strptime(t.Date, '%m/%d/%Y').date()
             isDebit = t.Transaction == 'DEBIT'
             memo = t.Memo.split(';')
             mcc = int(memo[1])

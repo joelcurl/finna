@@ -16,10 +16,23 @@ class CcStatement:
 
     @property
     def total(self):
-        _total = Decimal(0)
-        for _, category in self.groups.items():
-            _total += category().total
-        return _total
+        return sum([transaction.amount for transaction in self.transactions])
+
+    @property
+    def start(self):
+        return min(self.dates)
+
+    @property
+    def end(self):
+        return max(self.dates)
+
+    @property
+    def dates(self):
+        return [transaction.date for transaction in self.transactions]
+
+    @property
+    def creditor(self):
+        return self.cc_reader.creditor
 
     def category(self, category):
         return self.groups[category]()

@@ -1,4 +1,4 @@
-from PyPDF2 import PdfFileReader
+from PyPDF4 import PdfFileReader
 
 class AcmePaystubReader:
     text = ''

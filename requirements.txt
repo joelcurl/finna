@@ -1,2 +1,4 @@
 chardet
+PyPDF4
+sqlalchemy
 

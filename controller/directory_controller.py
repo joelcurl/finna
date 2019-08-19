@@ -1,6 +1,13 @@
+from banking.macu_statement import MacuStatement
+from brokerage.fidelity_statement import FidelityStatement, ACCOUNTS
 from liabilities.timed_liability import concept_lease
+from paystubs.reader import AcmePaystubReader
+from paystubs.wages import AcmePaystub
 from property.mac_book import MacBook
 from property.kelly_valuator import ChevyMalibu05Valuator
+from cc.visa import TransactionDb, MccReader
+from cc.elan_statement import ElanStatementReader
+from cc.statement import CcStatement
 from dataclasses import dataclass, field
 from typing import List
 from glob import glob
@@ -19,47 +26,83 @@ class DirStructUtil:
 class DirStructure:
     bank_statements: str = DirStructUtil.path('../banking/input/*')
     brokerage_statements: str = DirStructUtil.path('../brokerage/input/*')
+    cc_db: str = 'sqlite:///cc/cc.db'
+    mcc_codes: str = DirStructUtil.path('../cc/mcc-codes/mcc_codes.csv')
     cc_statements: str = DirStructUtil.path('../cc/input/*')
     paystubs: str = DirStructUtil.path('../paystubs/input/*')
-    liabilities: List[str] = field(default_factory=lambda: [concept_lease])
     properties: List[object] = field(default_factory=lambda: [MacBook(), ChevyMalibu05Valuator(milage=150000, sell_zip=84102)])
+    liabilities: List[str] = field(default_factory=lambda: [concept_lease])
+
+class StatementFactory:
+    bank_statement = MacuStatement
+    brokerage_statement = FidelityStatement
+    paystub_reader = lambda self, fname: AcmePaystub(AcmePaystubReader(fname).text)
+    cc_statement = lambda self, cc_contents, mcc_contents: CcStatement(ElanStatementReader(cc_contents), MccReader(mcc_contents))
+
+    def bank(self, contents):
+        return self.bank_statement(contents)
+
+    def brokerage(self, contents):
+        return self.brokerage_statement(contents)
+
+    def paystub(self, fname):
+        return self.paystub_reader(fname)
+
+    def cc(self, cc_contents, mcc_contents):
+        return self.cc_statement(cc_contents, mcc_contents)
 
 class DirectoryController:
-    def __init__(self, balance_sheet, income_statement, cash_flow_statement, dir_structure = DirStructure()):
+    def __init__(self, balance_sheet, income_statement, cash_flow_statement, dir_structure = DirStructure(), factory = StatementFactory()):
         self.balance_sheet = balance_sheet
         self.income_statement = income_statement
         self.cash_flow_statement = cash_flow_statement
         self.dir_structure = dir_structure
+        self.factory = factory
+
+        self.db = TransactionDb()
+        self.db.connect(self.dir_structure.cc_db)
         self._discover()
 
     def _discover(self):
         self._discover_bank_statements()
         self._discover_brokerage_statements()
-        self._discover_cc_statements()
         self._discover_paystubs()
+        self._discover_properties() # todo undo
+        self._discover_cc_statements()
         self._discover_liabilities()
-        self._discover_properties()
 
     def _discover_bank_statements(self):
         for statement in glob(self.dir_structure.bank_statements):
-            pass
+            with open(statement) as f:
+                self.balance_sheet.add_bank_statement(self.factory.bank(f.read()))
 
     def _discover_brokerage_statements(self):
         for statement in glob(self.dir_structure.brokerage_statements):
-            pass
-
-    def _discover_cc_statements(self):
-        for statement in glob(self.dir_structure.cc_statements):
-            pass
+            with open(statement) as f:
+                brokerage_accounts = self.factory.brokerage(f.read())
+                for account in ACCOUNTS.keys():
+                    if account == 'SAVINGS' or account == 'INVESTMENT': # todo this should probably be a detail of the class
+                        self.balance_sheet.add_brokerage_statement_to_current(account, brokerage_accounts.accounts[account])
+                    else:
+                        self.balance_sheet.add_brokerage_statement_to_noncurrent(account, brokerage_accounts.accounts[account])
 
     def _discover_paystubs(self):
         for paystub in glob(self.dir_structure.paystubs):
-            pass
-
-    def _discover_liabilities(self):
-        for liability in self.dir_structure.liabilities:
-            pass
+            with open(paystub, 'rb') as f:
+                self.balance_sheet.add_paystub(self.factory.paystub(f))
 
     def _discover_properties(self):
         for fixed_asset in self.dir_structure.properties:
-            pass
+            self.balance_sheet.add_fixed_asset(fixed_asset)
+
+    def _discover_cc_statements(self):
+        with open(self.dir_structure.mcc_codes) as mcc_f:
+            mcc = mcc_f.read()
+            for statement in glob(self.dir_structure.cc_statements):
+                with open(statement) as cc:
+                    self.balance_sheet.add_cc_statement(self.factory.cc(cc.read(), mcc))
+
+    def _discover_liabilities(self):
+        for liability in self.dir_structure.liabilities:
+            self.balance_sheet.add_timed_liability(liability)
+
