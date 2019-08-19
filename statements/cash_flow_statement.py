@@ -1,34 +1,55 @@
+from .util import is_date_between
 from recordclass import recordclass
 from decimal import Decimal
+from datetime import datetime
 from tabulate import tabulate
+from cc.categories import Education
 
 class CashFlowStatement:
     OperatingActivities = recordclass('OperatingActivities', 'salaries bonuses deductions expenses taxes')
     InvestingActivities = recordclass('InvestingActivities', 'education investment')
     FinancingActivities = recordclass('FinancingActivities', 'loans')
-    operating_cash_flow = Decimal(0)
-    current_cash_flow = Decimal(0)
-    final_cash_balance = Decimal(0)
 
-    def __init__(self, beginning, ending, orig_cash_balance):
-        self.beginning = beginning
-        self.ending = ending
-        self.orig_cash_balance = orig_cash_balance
+    cc_transactions = {}
+
+    def __init__(self, beginning, ending):
+        self.beginning = datetime.fromisoformat(beginning).date()
+        self.ending = datetime.fromisoformat(ending).date()
+        self.orig_cash_balance = Decimal(0)
         self.operating = self.OperatingActivities(Decimal(0), Decimal(0), Decimal(0), Decimal(0), Decimal(0))
         self.investing = self.InvestingActivities(Decimal(0), Decimal(0))
         self.financing = self.FinancingActivities(Decimal(0))
 
     def add_paystub(self, paystub):
+        pay_period = paystub.pay_period
+        paystub = paystub.current
+        if not is_date_between(date=pay_period.end, start=self.beginning, end=self.ending):
+            return
         self.operating.salaries += sum(paystub.earnings.wages.values())
         self.operating.bonuses += sum(paystub.earnings.bonus.values())
         self.operating.deductions -= sum(paystub.deductions.total.values())
         self.operating.taxes -= sum(paystub.taxes.total.values())
-        self.__compute_summaries()
 
     def add_cc_statement(self, statement):
-        self.investing.education += statement.category('Education').total
-        self.operating.expenses += (statement.total - self.investing.education)
-        self.__compute_summaries()
+        for transaction in statement.transactions:
+            if is_date_between(transaction.date, self.beginning, self.ending) and transaction.id not in self.cc_transactions:
+                self.cc_transactions[transaction.id] = transaction
+                if transaction.in_category(Education):
+                    self.investing.education += transaction.amount
+                else:
+                    self.operating.expenses += transaction.amount
+
+    @property
+    def operating_cash_flow(self):
+        return sum(self.operating)
+
+    @property
+    def current_cash_flow(self):
+        return self.operating_cash_flow + sum(self.investing) + sum(self.financing)
+
+    @property
+    def final_cash_balance(self):
+        return self.orig_cash_balance + self.current_cash_flow
 
     def to_table(self):
         tables = [[
@@ -68,7 +89,3 @@ class CashFlowStatement:
             formatted_tables += tabulate(table, tablefmt='fancy_grid', floatfmt='.2f', headers='firstrow') + '\n\n'
         return formatted_tables
 
-    def __compute_summaries(self):
-        self.operating_cash_flow = sum(self.operating)
-        self.current_cash_flow = self.operating_cash_flow + sum(self.investing) + sum(self.financing)
-        self.final_cash_balance = self.orig_cash_balance + self.current_cash_flow

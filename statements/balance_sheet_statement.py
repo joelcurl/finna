@@ -19,7 +19,6 @@ class BalanceSheetStatement:
 
     paystub_dates = {}
     paystub_taxable = {}
-
     cc_dates = {}
 
     def __init__(self, now):

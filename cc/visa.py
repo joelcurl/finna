@@ -29,6 +29,9 @@ class VisaTransaction(Base):
     mcc = Column(Integer, ForeignKey('mcc.mcc'))
     amount = Column(Numeric)
 
+    def in_category(self, mcc_category):
+        return mcc_category().in_category(self.mcc)
+
 class Mcc(Base):
     __tablename__ = 'mcc'
     mcc = Column(Integer, primary_key=True)

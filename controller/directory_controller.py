@@ -67,7 +67,7 @@ class DirectoryController:
         self._discover_bank_statements()
         self._discover_brokerage_statements()
         self._discover_paystubs()
-        self._discover_properties() # todo undo
+        self._discover_properties()
         self._discover_cc_statements()
         self._discover_liabilities()
 
@@ -75,6 +75,7 @@ class DirectoryController:
         for statement in glob(self.dir_structure.bank_statements):
             with open(statement) as f:
                 self.balance_sheet.add_bank_statement(self.factory.bank(f.read()))
+        self.cash_flow_statement.orig_cash_balance = self.balance_sheet.assets.current.cash
 
     def _discover_brokerage_statements(self):
         for statement in glob(self.dir_structure.brokerage_statements):
@@ -87,9 +88,11 @@ class DirectoryController:
                         self.balance_sheet.add_brokerage_statement_to_noncurrent(account, brokerage_accounts.accounts[account])
 
     def _discover_paystubs(self):
-        for paystub in glob(self.dir_structure.paystubs):
-            with open(paystub, 'rb') as f:
-                self.balance_sheet.add_paystub(self.factory.paystub(f))
+        for paystub_statement in glob(self.dir_structure.paystubs):
+            with open(paystub_statement, 'rb') as f:
+                paystub = self.factory.paystub(f)
+                self.cash_flow_statement.add_paystub(paystub)
+                self.balance_sheet.add_paystub(paystub)
 
     def _discover_properties(self):
         for fixed_asset in self.dir_structure.properties:
@@ -100,7 +103,9 @@ class DirectoryController:
             mcc = mcc_f.read()
             for statement in glob(self.dir_structure.cc_statements):
                 with open(statement) as cc:
-                    self.balance_sheet.add_cc_statement(self.factory.cc(cc.read(), mcc))
+                    cc_statement = self.factory.cc(cc.read(), mcc)
+                    self.cash_flow_statement.add_cc_statement(cc_statement)
+                    self.balance_sheet.add_cc_statement(cc_statement)
 
     def _discover_liabilities(self):
         for liability in self.dir_structure.liabilities:

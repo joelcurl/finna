@@ -31,6 +31,9 @@ class MccCategory:
         else:
             return {}
 
+    def in_category(self, mcc):
+        return mcc == self.mcc
+
     @property
     def total(self):
         return self.to_dict().get('total', Decimal(0))
@@ -55,6 +58,12 @@ class SuperCategory:
             if d:
                 matches[t.description] = d
         return matches
+
+    def in_category(self, mcc):
+        for mcc_category in self.types:
+            if mcc_category.in_category(mcc):
+                return True
+        return False
 
     @property
     def total(self):

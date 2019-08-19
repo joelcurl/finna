@@ -29,7 +29,7 @@ class ElanStatementReader:
             try:
                 id = str(int(memo[0]))
             except ValueError:
-                id = '{} ${}'.format(date, amount) # use date and amount as id if 'INTERNET' payment or id is otherwise missing
+                continue # likely a payment, not a purchase
             ts.append(self.Transaction(date, isDebit, t.Name, mcc, amount, id))
         return ts
 

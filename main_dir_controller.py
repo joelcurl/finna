@@ -5,13 +5,13 @@ from statements.cash_flow_statement import CashFlowStatement
 from datetime import datetime
 
 now = datetime.today().date()
-then = now.replace(month=now.month-1)
+then = now.replace(month=now.month-3)
 now = now.isoformat()
 then = then.isoformat()
 
 balance_sheet = BalanceSheetStatement(now)
 income_statement = IncomeStatement(then, now)
-cash_flow_statement = CashFlowStatement(then, now, 0) # todo orig_cash_balance == 0? here?
+cash_flow_statement = CashFlowStatement(then, now)
 
 controller = DirectoryController(balance_sheet, income_statement, cash_flow_statement)
 

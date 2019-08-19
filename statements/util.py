@@ -8,4 +8,7 @@ def is_current_date(key, past_dates, today):
             return True
     return False
 
-
+def is_date_between(date, start, end):
+    if start <= date and date <= end:
+        return True
+    return False
