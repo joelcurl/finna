@@ -125,7 +125,7 @@ class BalanceSheetStatement:
 
     def to_table(self):
         current_asset_table = [[f'Brokerage {account_name}', value] for account_name, value in self.assets.current.brokerage.items()]
-        current_asset_table.insert(0, ['Noncurrent Assets', 'Amount'])
+        current_asset_table.insert(0, ['Current Assets', 'Amount'])
         current_asset_table.insert(1, ['Cash', self.assets.current.cash])
         current_asset_table.append(['Total', self.current_asset_total])
 

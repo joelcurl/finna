@@ -24,12 +24,12 @@ class DirStructUtil:
 
 @dataclass
 class DirStructure:
-    bank_statements: str = DirStructUtil.path('../banking/input/*')
-    brokerage_statements: str = DirStructUtil.path('../brokerage/input/*')
+    bank_statements: str = DirStructUtil.path('../input/banking/*')
+    brokerage_statements: str = DirStructUtil.path('../input/brokerage/*')
     cc_db: str = 'sqlite:///cc/cc.db'
     mcc_codes: str = DirStructUtil.path('../cc/mcc-codes/mcc_codes.csv')
-    cc_statements: str = DirStructUtil.path('../cc/input/*')
-    paystubs: str = DirStructUtil.path('../paystubs/input/*')
+    cc_statements: str = DirStructUtil.path('../input/cc/*')
+    paystubs: str = DirStructUtil.path('../input/paystubs/*')
     properties: List[object] = field(default_factory=lambda: [MacBook(), ChevyMalibu05Valuator(milage=150000, sell_zip=84102)])
     liabilities: List[str] = field(default_factory=lambda: [concept_lease])
 

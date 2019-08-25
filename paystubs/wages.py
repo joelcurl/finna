@@ -69,7 +69,10 @@ class AcmePaystub:
         return {'current': Deductions(pretax['current'], posttax['current'], cur_total), 'ytd': Deductions(pretax['ytd'], posttax['ytd'], ytd_total)}
 
     def __parse_taxes(self):
-        line_items = [{'Taxable Wages': self.__find_cur_ytd_pair('Note:')}]
+        try:
+            line_items = [{'Taxable Wages': self.__find_cur_ytd_pair('Note:')}]
+        except LookupError:
+            line_items = [{'Taxable Wages': self.__find_cur_ytd_pair('-*\s*Total NonTax Earnings')}]
         line_items += [self.__find_cur_ytd_named_pair_nth_match('TX Withholding Tax', 1)]
         line_items += self.__parse_cur_ytd_named_line_items([
             'TX Withholding Tax',
@@ -96,7 +99,11 @@ class AcmePaystub:
         return Decimal(val.replace(',', ''))
 
     def __find_cur_ytd_pair(self, lookahead):
-        return re.search(f'(?P<current>[\d,\.]+)\s+(?P<ytd>[\d,\.]+)\s+{lookahead}', self.parse_str).groupdict()
+        try:
+            search_re = f'(?P<current>[\d,\.]+)\s+(?P<ytd>[\d,\.]+)\s+{lookahead}'
+            return re.search(search_re, self.parse_str).groupdict()
+        except AttributeError:
+            raise LookupError(f'Could not find pattern in paystub: {search_re}')
 
     def __find_cur_ytd_named_pair(self, name):
         try:
