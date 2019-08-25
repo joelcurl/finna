@@ -10,7 +10,6 @@ class CcStatement:
         self.groups = categories
         self.cc_reader = cc_reader
         self.transactions = self.cc_reader.visa_transactions
-        self.db.add_many(self.transactions)
         self.mcc_reader = mcc_reader
         self.db.add_many(self.mcc_reader.codes)
 

@@ -1,4 +1,4 @@
-from .visa import TransactionDb, VisaTransaction, Mcc
+from .visa import VisaTransaction
 from decimal import Decimal
 from datetime import datetime
 from collections import namedtuple

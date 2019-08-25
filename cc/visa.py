@@ -37,9 +37,6 @@ class Mcc(Base):
     mcc = Column(Integer, primary_key=True)
     description = Column(String)
 
-engine = create_engine('sqlite:///cc.db')
-Base.metadata.create_all(engine)
-
 @singleton
 class TransactionDb:
     def connect(self, conn_str):

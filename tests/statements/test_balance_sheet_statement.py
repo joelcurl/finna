@@ -2,6 +2,7 @@ from statements.balance_sheet_statement import BalanceSheetStatement
 from cc.categories import *
 from tests.mocks.property.property_mock import *
 from tests.mocks.liabilities.timed_liability_mock import *
+from tests.mocks.liabilities.static_liability_mock import *
 from tests.mocks.cc.statement_mock import *
 from tests.mocks.paystubs.wages_mock import *
 from unittest.mock import PropertyMock, patch
@@ -10,9 +11,9 @@ from dateutil.relativedelta import relativedelta
 from pytest import fixture, mark
 from decimal import Decimal
 
-@fixture(params=['1971-07-31'])
+@fixture(params=[('1970-01-01', '1971-07-31')])
 def balance_sheet(request):
-    return BalanceSheetStatement(now=request.param)
+    return BalanceSheetStatement(then=request.param[0], now=request.param[1])
 
 class TestBalanceSheetStatement:
     def test_add_bank_statement(self, balance_sheet):
@@ -83,6 +84,10 @@ class TestBalanceSheetStatement:
         fixed_asset = property_mock(4)
         balance_sheet.add_fixed_asset(fixed_asset)
         assert 4 == balance_sheet.assets.noncurrent.fixed
+
+    def test_add_static_liability(self, balance_sheet, static_liability_mock):
+        balance_sheet.add_static_liability(static_liability_mock)
+        assert -static_liability_mock.amount_remaining.return_value == balance_sheet.liabilities.noncurrent.education
 
     def test_add_cc_statement(self, balance_sheet, cc_statement_mock):
         cc_statement_mock.transactions = [
@@ -187,8 +192,9 @@ class TestBalanceSheetStatement:
     def test_noncurrent_liability_total(self, balance_sheet):
         real_tax_burden = type(balance_sheet).tax_burden
         type(balance_sheet).tax_burden = 22
+        balance_sheet.liabilities.noncurrent.education = -1
         balance_sheet.liabilities.noncurrent.loans = 23
-        assert 45 == balance_sheet.noncurrent_liability_total
+        assert 44 == balance_sheet.noncurrent_liability_total
         type(balance_sheet).tax_burden = real_tax_burden
 
     def test_ordinary_taxable_income(self, balance_sheet):

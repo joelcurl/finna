@@ -11,12 +11,13 @@ class BalanceSheetStatement:
     CurrentAssets = recordclass('CurrentAssets', 'cash brokerage')
     NoncurrentAssets = recordclass('NoncurrentAssets', 'brokerage taxes fixed')
     CurrentLiabilities = recordclass('CurrentLiabilities', 'credit leases')
-    NoncurrentLiabilities = recordclass('NoncurrentLiabilities', 'taxes loans')
+    NoncurrentLiabilities = recordclass('NoncurrentLiabilities', 'taxes loans education')
 
     TaxAssets = recordclass('TaxAssets', 'federal_withheld state_withheld')
     TaxLiabilities = recordclass('TaxLiabilities', 'federal_tax_ytd state_tax_ytd')
 
-    def __init__(self, now):
+    def __init__(self, then, now):
+        self.then = date.fromisoformat(then)
         self.now = date.fromisoformat(now)
         self.assets = self.Assets(
                 self.CurrentAssets(Decimal(0), {}),
@@ -24,7 +25,7 @@ class BalanceSheetStatement:
         )
         self.liabilities = self.Liabilities(
                 self.CurrentLiabilities({}, Decimal(0)),
-                self.NoncurrentLiabilities(self.TaxLiabilities(Decimal(0), Decimal(0)), Decimal(0))
+                self.NoncurrentLiabilities(self.TaxLiabilities(Decimal(0), Decimal(0)), Decimal(0), Decimal(0))
         )
         self.paystub_dates = {}
         self.paystub_taxable = {}
@@ -58,10 +59,16 @@ class BalanceSheetStatement:
     def add_cc_statement(self, statement):
         if not is_current_date(key=statement.creditor, past_dates=self.cc_dates, today=statement.end):
             return
-        self.liabilities.current.credit[statement.creditor] = statement.total
+        self.liabilities.current.credit[statement.creditor] = Decimal(0)
+        for transaction in statement.transactions:
+            if self.then <= transaction.date and transaction.date <= self.now:
+                self.liabilities.current.credit[statement.creditor] += transaction.amount
 
     def add_timed_liability(self, lease):
         self.liabilities.current.leases += -lease.amount_remaining(self.now)
+
+    def add_static_liability(self, liability):
+        self.liabilities.noncurrent.education += -liability.amount_remaining(self.now)
 
     @property
     def current_asset_total(self):
@@ -94,6 +101,7 @@ class BalanceSheetStatement:
         return sum([
             self.tax_burden,
             self.liabilities.noncurrent.loans,
+            self.liabilities.noncurrent.education,
         ])
 
     @property
@@ -167,6 +175,7 @@ class BalanceSheetStatement:
                 [
                     ['Noncurrent Liabilities', 'Amount'],
                     ['Loans', self.liabilities.noncurrent.loans],
+                    ['Education', self.liabilities.noncurrent.education],
                     ['Federal Tax YTD', self.federal_tax_burden],
                     ['State Tax YTD', self.state_tax_burden],
                     ['Total', self.noncurrent_liability_total],

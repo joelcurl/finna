@@ -1,6 +1,7 @@
 from banking.macu_statement import MacuStatement
 from brokerage.fidelity_statement import FidelityStatement, ACCOUNTS
-from liabilities.timed_liability import concept_lease
+from liabilities.timed_liability import TimedLiability, concept_lease
+from liabilities.static_liability import StaticLiability, education_liabilities
 from paystubs.reader import AcmePaystubReader
 from paystubs.wages import AcmePaystub
 from property.mac_book import MacBook
@@ -31,7 +32,8 @@ class DirStructure:
     cc_statements: str = DirStructUtil.path('../input/cc/*')
     paystubs: str = DirStructUtil.path('../input/paystubs/*')
     properties: List[object] = field(default_factory=lambda: [MacBook(), ChevyMalibu05Valuator(milage=150000, sell_zip=84102)])
-    liabilities: List[str] = field(default_factory=lambda: [concept_lease])
+    timed_liabilities: List[TimedLiability] = field(default_factory=lambda: [concept_lease])
+    static_liabilities: List[StaticLiability] = field(default_factory=lambda: education_liabilities)
 
 class StatementFactory:
     bank_statement = MacuStatement
@@ -110,8 +112,11 @@ class DirectoryController:
                     self.income_statement.add_cc_statement(cc_statement)
 
     def _discover_liabilities(self):
-        for liability in self.dir_structure.liabilities:
+        for liability in self.dir_structure.timed_liabilities:
             self.cash_flow_statement.add_timed_liability(liability)
             self.balance_sheet.add_timed_liability(liability)
             self.income_statement.add_timed_liability(liability)
+
+        for liability in self.dir_structure.static_liabilities:
+            self.balance_sheet.add_static_liability(liability)
 

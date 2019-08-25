@@ -13,17 +13,12 @@ then = now.replace(month=now.month-1)
 now = now.isoformat()
 then = then.isoformat()
 
-balance_sheet = BalanceSheetStatement(now)
+balance_sheet = BalanceSheetStatement(then, now)
 income_statement = IncomeStatement(then, now)
 cash_flow_statement = CashFlowStatement(then, now)
 
-dir_structure = DirStructure()
-#dir_structure.bank_statements = Util.path('../banking/input/*')
-#dir_structure.brokerage_statements = Util.path('../brokerage/input/*')
-#dir_structure.cc_statements = Util.path('../cc/input/*')
-#dir_structure.paystubs = Util.path('../paystubs/input/*')
 
-controller = DirectoryController(balance_sheet, income_statement, cash_flow_statement, dir_structure)
+controller = DirectoryController(balance_sheet, income_statement, cash_flow_statement)
 
 print(cash_flow_statement.to_table())
 print(balance_sheet.to_table())
