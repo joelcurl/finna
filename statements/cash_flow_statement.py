@@ -11,8 +11,6 @@ class CashFlowStatement:
     InvestingActivities = recordclass('InvestingActivities', 'education investment')
     FinancingActivities = recordclass('FinancingActivities', 'loans')
 
-    cc_transactions = {}
-
     def __init__(self, beginning, ending):
         self.beginning = datetime.fromisoformat(beginning).date()
         self.ending = datetime.fromisoformat(ending).date()
@@ -20,20 +18,22 @@ class CashFlowStatement:
         self.operating = self.OperatingActivities(Decimal(0), Decimal(0), Decimal(0), Decimal(0), Decimal(0))
         self.investing = self.InvestingActivities(Decimal(0), Decimal(0))
         self.financing = self.FinancingActivities(Decimal(0))
+        self.cc_transactions = {}
 
     def add_paystub(self, paystub):
         pay_period = paystub.pay_period
         paystub = paystub.current
         if not is_date_between(date=pay_period.end, start=self.beginning, end=self.ending):
             return
-        self.operating.salaries += sum(paystub.earnings.wages.values())
-        self.operating.bonuses += sum(paystub.earnings.bonus.values())
-        self.operating.deductions -= sum(paystub.deductions.total.values())
-        self.operating.taxes -= sum(paystub.taxes.total.values())
+        self.operating.salaries += paystub.earnings.wages
+        self.operating.bonuses += paystub.earnings.bonuses
+        self.operating.deductions -= paystub.deductions.total
+        self.operating.taxes -= paystub.taxes.total
 
     def add_timed_liability(self, liability):
         # assume monthly payments
-        months = relativedelta(self.ending, self.beginning).months
+        delta = relativedelta(self.ending, self.beginning)
+        months = delta.years * 12 + delta.months
         self.operating.expenses += months * -liability.monthly_amount
 
     def add_cc_statement(self, statement):

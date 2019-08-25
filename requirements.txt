@@ -2,4 +2,5 @@ chardet
 PyPDF4
 sqlalchemy
 python-dateutil
+pytest
 

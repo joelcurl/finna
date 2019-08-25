@@ -13,8 +13,6 @@ class IncomeStatement:
     ItExpenses = recordclass('ItExpenses', 'interest taxes')
     Expenses = recordclass('Expenses', 'ebit it')
 
-    cc_transactions = {}
-
     def __init__(self, beginning, ending):
         self.beginning = date.fromisoformat(beginning)
         self.ending = date.fromisoformat(ending)
@@ -24,16 +22,17 @@ class IncomeStatement:
                 self.EbitExpenses(Decimal(0), Decimal(0), Decimal(0), Decimal(0), Decimal(0)),
                 self.ItExpenses(Decimal(0), Decimal(0)),
         )
+        self.cc_transactions = {}
 
     def add_paystub(self, paystub):
         pay_period = paystub.pay_period
         paystub = paystub.current
         if not is_date_between(date=pay_period.end, start=self.beginning, end=self.ending):
             return
-        self.revenue.salaries += sum(paystub.earnings.wages.values())
-        self.revenue.bonuses += sum(paystub.earnings.bonus.values())
-        self.expenses.ebit.o_and_a += -sum(paystub.deductions.total.values())
-        self.expenses.it.taxes += -sum(paystub.taxes.total.values())
+        self.revenue.salaries += paystub.earnings.wages
+        self.revenue.bonuses += paystub.earnings.bonuses
+        self.expenses.ebit.o_and_a -= paystub.deductions.total
+        self.expenses.it.taxes -= paystub.taxes.total
 
     def add_timed_liability(self, liability):
         self.expenses.ebit.o_and_a += -liability.amount_from(self.beginning, self.ending)

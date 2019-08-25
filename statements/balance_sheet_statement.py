@@ -15,12 +15,6 @@ class BalanceSheetStatement:
 
     TaxAssets = recordclass('TaxAssets', 'federal_withheld state_withheld')
     TaxLiabilities = recordclass('TaxLiabilities', 'federal_tax_ytd state_tax_ytd')
-    miscellaneous_income = Decimal(0)
-    preferred_taxable_income = Decimal(0)
-
-    paystub_dates = {}
-    paystub_taxable = {}
-    cc_dates = {}
 
     def __init__(self, now):
         self.now = date.fromisoformat(now)
@@ -32,6 +26,11 @@ class BalanceSheetStatement:
                 self.CurrentLiabilities({}, Decimal(0)),
                 self.NoncurrentLiabilities(self.TaxLiabilities(Decimal(0), Decimal(0)), Decimal(0))
         )
+        self.paystub_dates = {}
+        self.paystub_taxable = {}
+        self.cc_dates = {}
+        self.miscellaneous_income = Decimal(0)
+        self.preferred_taxable_income = Decimal(0)
 
     def add_bank_statement(self, statement):
         self.assets.current.cash += statement.balance
@@ -45,9 +44,9 @@ class BalanceSheetStatement:
     def add_paystub(self, paystub):
         if not is_current_date(key=paystub.employer, past_dates=self.paystub_dates, today=paystub.pay_period.end):
             return
-        self.assets.noncurrent.taxes.federal_withheld = sum(paystub.ytd.taxes.fed_withholding.values())
-        self.assets.noncurrent.taxes.state_withheld = sum(paystub.ytd.taxes.state_withholding.values())
-        self.paystub_taxable[paystub.employer] = sum(paystub.ytd.taxes.taxable_wages.values())
+        self.assets.noncurrent.taxes.federal_withheld = paystub.ytd.taxes.federal_withheld
+        self.assets.noncurrent.taxes.state_withheld = paystub.ytd.taxes.state_withheld
+        self.paystub_taxable[paystub.employer] = paystub.ytd.taxes.taxable_wages
 
     def add_fixed_asset(self, asset):
         self.assets.noncurrent.fixed += asset.mark_to_market()

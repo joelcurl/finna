@@ -1,14 +1,84 @@
 from collections import namedtuple
+from dataclasses import dataclass
 from decimal import Decimal
 import re
 from datetime import datetime
 
+
+@dataclass
+class Earnings:
+    wages_detail: dict
+    bonus_detail: dict
+    net_detail: dict
+    total_detail: dict
+
+    @property
+    def wages(self):
+        return sum(self.wages_detail.values())
+
+    @property
+    def bonuses(self):
+        return sum(self.bonus_detail.values())
+
+@dataclass
+class PreTaxDeductions:
+    hsa_detail: dict
+    vision_detail: dict
+    dental_detail: dict
+    pension401k_detail: dict
+    medical_detail: dict
+    total_detail: dict
+
+    @property
+    def total(self):
+        return sum(self.total_detail.values())
+
+@dataclass
+class PostTaxDeductions:
+    long_term_disability_detail: dict
+    legal_detail: dict
+    roth_pension401k_detail: dict
+    total_detail: dict
+
+    @property
+    def total(self):
+        return sum(self.total_detail.values())
+
+@dataclass
+class Deductions:
+    pretax: PreTaxDeductions
+    posttax: PostTaxDeductions
+
+    @property
+    def total(self):
+        return sum([self.pretax.total, self.posttax.total])
+
+@dataclass
+class Taxes:
+    taxable_wages_detail: dict
+    state_withholding_detail: dict
+    fed_withholding_detail: dict
+    ss_tax_detail: dict
+    medicare_tax_detail: dict
+    total_detail: dict
+
+    @property
+    def taxable_wages(self):
+        return sum(self.taxable_wages_detail.values())
+
+    @property
+    def federal_withheld(self):
+        return sum(self.fed_withholding_detail.values())
+
+    @property
+    def state_withheld(self):
+        return sum(self.state_withholding_detail.values())
+
+    @property
+    def total(self):
+        return sum(self.total_detail.values())
+
 Paystub = namedtuple('Paystub', 'earnings deductions taxes')
-Earnings = namedtuple('Earnings', 'wages bonus net total')
-Deductions = namedtuple('Deductions', 'pretax posttax total')
-PreTaxDeductions = namedtuple('PreTaxDeductions', 'hsa vision dental pension401k medical total')
-PostTaxDeductions = namedtuple('PostTaxDeductions', 'long_term_disability legal roth_pension401k total')
-Taxes = namedtuple('Taxes', 'taxable_wages state_withholding fed_withholding ss_tax medicare_tax total')
 PayPeriod = namedtuple('PayPeriod', 'start end')
 
 class AcmePaystub:
@@ -64,9 +134,7 @@ class AcmePaystub:
     def __parse_deductions(self):
         pretax = self.__parse_pretax_ded()
         posttax = self.__parse_posttax_ded()
-        cur_total = {'Total Deductions': Decimal(pretax['current'].total['Total Pre-Tax Deductions']) + Decimal(posttax['current'].total['Total Post-Tax Deductions'])}
-        ytd_total = {'Total Deductions': Decimal(pretax['ytd'].total['Total Pre-Tax Deductions']) + Decimal(posttax['ytd'].total['Total Post-Tax Deductions'])}
-        return {'current': Deductions(pretax['current'], posttax['current'], cur_total), 'ytd': Deductions(pretax['ytd'], posttax['ytd'], ytd_total)}
+        return {'current': Deductions(pretax['current'], posttax['current']), 'ytd': Deductions(pretax['ytd'], posttax['ytd'])}
 
     def __parse_taxes(self):
         try:
