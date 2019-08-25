@@ -20,7 +20,7 @@ class TestCashFlowStatement:
         income_statement.add_paystub(paystub)
         assert 100 == income_statement.revenue.salaries
         assert 20 == income_statement.revenue.bonuses
-        assert -50 == income_statement.expenses.ebit.o_and_a
+        assert -50 == income_statement.expenses.ebit.deductions
         assert -10 == income_statement.expenses.it.taxes
 
     def test_add_paystub_date_out_of_range(self, income_statement):

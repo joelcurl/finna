@@ -9,7 +9,7 @@ from tabulate import tabulate
 
 class IncomeStatement:
     Revenue = recordclass('Revenue', 'salaries bonuses capital_gains')
-    EbitExpenses = recordclass('EbitExpenses', 'o_and_a education a_and_m discretionary debts')
+    EbitExpenses = recordclass('EbitExpenses', 'o_and_a deductions education a_and_m discretionary debts')
     ItExpenses = recordclass('ItExpenses', 'interest taxes')
     Expenses = recordclass('Expenses', 'ebit it')
 
@@ -19,7 +19,7 @@ class IncomeStatement:
 
         self.revenue = self.Revenue(Decimal(0), Decimal(0), Decimal(0))
         self.expenses = self.Expenses(
-                self.EbitExpenses(Decimal(0), Decimal(0), Decimal(0), Decimal(0), Decimal(0)),
+                self.EbitExpenses(Decimal(0), Decimal(0), Decimal(0), Decimal(0), Decimal(0), Decimal(0)),
                 self.ItExpenses(Decimal(0), Decimal(0)),
         )
         self.cc_transactions = {}
@@ -31,7 +31,7 @@ class IncomeStatement:
             return
         self.revenue.salaries += paystub.earnings.wages
         self.revenue.bonuses += paystub.earnings.bonuses
-        self.expenses.ebit.o_and_a -= paystub.deductions.total
+        self.expenses.ebit.deductions -= paystub.deductions.total
         self.expenses.it.taxes -= paystub.taxes.total
 
     def add_timed_liability(self, liability):
@@ -103,6 +103,7 @@ class IncomeStatement:
 
                 [
                     ['Operating and Administrative', self.expenses.ebit.o_and_a],
+                    ['Deductions', self.expenses.ebit.deductions],
                     ['Education', self.expenses.ebit.education],
                     ['Acquisition and Maintenence', self.expenses.ebit.a_and_m],
                     ['Discretionary', self.expenses.ebit.discretionary],
