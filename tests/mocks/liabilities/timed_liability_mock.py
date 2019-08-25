@@ -11,6 +11,7 @@ def timed_liability_mock():
     mock.monthly_amount_mock = monthly_amount
 
     mock.amount_from.return_value = 1000
+    mock.amount_remaining.return_value = 800
 
     return mock
 

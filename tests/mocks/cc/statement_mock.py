@@ -25,7 +25,20 @@ def transaction_mock(date, amount, category = None):
     return mock
 
 @fixture
-def cc_statement_mock():
+def cc_statement_mock(creditor = 'Acme', end = '1970-02-01'):
     mock = Mock(spec=CcStatement)
+
+    creditor_mock = PropertyMock(return_value=creditor)
+    type(mock).creditor = creditor_mock
+    mock.creditor_mock = creditor_mock
+
+    total_mock = PropertyMock(side_effect=lambda: sum([transaction.amount for transaction in mock.transactions]))
+    type(mock).total = total_mock
+    mock.total_mock = total_mock
+
+    end_mock = PropertyMock(return_value=datetime.fromisoformat(end).date())
+    type(mock).end = end_mock
+    mock.end_mock = end_mock
+
     return mock
 

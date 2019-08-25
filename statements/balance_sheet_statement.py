@@ -44,8 +44,12 @@ class BalanceSheetStatement:
     def add_paystub(self, paystub):
         if not is_current_date(key=paystub.employer, past_dates=self.paystub_dates, today=paystub.pay_period.end):
             return
-        self.assets.noncurrent.taxes.federal_withheld = paystub.ytd.taxes.federal_withheld
-        self.assets.noncurrent.taxes.state_withheld = paystub.ytd.taxes.state_withheld
+        if paystub.employer in self.paystub_taxable: # newer ytd info for employer already added
+            self.assets.noncurrent.taxes.federal_withheld = paystub.ytd.taxes.federal_withheld
+            self.assets.noncurrent.taxes.state_withheld = paystub.ytd.taxes.state_withheld
+        else: # new employer
+            self.assets.noncurrent.taxes.federal_withheld += paystub.ytd.taxes.federal_withheld
+            self.assets.noncurrent.taxes.state_withheld += paystub.ytd.taxes.state_withheld
         self.paystub_taxable[paystub.employer] = paystub.ytd.taxes.taxable_wages
 
     def add_fixed_asset(self, asset):
@@ -70,8 +74,7 @@ class BalanceSheetStatement:
     def noncurrent_asset_total(self):
         return sum([
             sum(self.assets.noncurrent.brokerage.values()),
-            self.assets.noncurrent.taxes.federal_withheld,
-            self.assets.noncurrent.taxes.state_withheld,
+            self.tax_withheld,
             self.assets.noncurrent.fixed,
         ])
 
@@ -89,14 +92,17 @@ class BalanceSheetStatement:
     @property
     def noncurrent_liability_total(self):
         return sum([
-            self.liabilities.noncurrent.taxes.federal_tax_ytd,
-            self.liabilities.noncurrent.taxes.state_tax_ytd,
+            self.tax_burden,
             self.liabilities.noncurrent.loans,
         ])
 
     @property
     def ordinary_taxable_income(self):
         return sum(self.paystub_taxable.values()) + self.miscellaneous_income
+
+    @property
+    def tax_withheld(self):
+        return sum([self.assets.noncurrent.taxes.federal_withheld, self.assets.noncurrent.taxes.state_withheld])
 
     @property
     def federal_tax_burden(self):
@@ -109,6 +115,10 @@ class BalanceSheetStatement:
         tax_burden = -Tax.calc_flat_tax(self.ordinary_taxable_income, 0.0495)
         self.liabilities.noncurrent.taxes.state_tax_ytd = tax_burden
         return tax_burden
+
+    @property
+    def tax_burden(self):
+        return sum([self.federal_tax_burden, self.state_tax_burden])
 
     @property
     def liability_total(self):

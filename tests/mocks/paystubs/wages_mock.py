@@ -34,9 +34,28 @@ def taxes_mock(total):
 
     return mock
 
-def paystub_mock(start_date, end_date):
+def taxes_withholding_mock(federal_withheld, state_withheld, taxable_wages):
+    mock = Mock(spec=Taxes)
+
+    federal_withheld_mock = PropertyMock(return_value=federal_withheld)
+    type(mock).federal_withheld = federal_withheld_mock
+    mock.federal_withheld_mock = federal_withheld_mock
+
+    state_withheld_mock = PropertyMock(return_value=state_withheld)
+    type(mock).state_withheld = state_withheld_mock
+    mock.state_withheld_mock = state_withheld_mock
+
+    taxable_wages_mock = PropertyMock(return_value=taxable_wages)
+    type(mock).taxable_wages = taxable_wages_mock
+    mock.taxable_wages_mock = taxable_wages_mock
+
+    return mock
+
+def paystub_mock(start_date, end_date, employer = 'Acme'):
     mock = Mock(spec=AcmePaystub)
     mock.pay_period = PayPeriod(datetime.fromisoformat(start_date).date(), datetime.fromisoformat(end_date).date())
     type(mock).current = PropertyMock(return_value=mock)
+    type(mock).ytd = PropertyMock(return_value=mock)
+    type(mock).employer = PropertyMock(return_value=employer)
     return mock
 

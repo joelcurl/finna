@@ -3,7 +3,6 @@ from cc.categories import *
 from tests.mocks.liabilities.timed_liability_mock import *
 from tests.mocks.cc.statement_mock import *
 from tests.mocks.paystubs.wages_mock import *
-from unittest.mock import PropertyMock
 from pytest import fixture, mark
 from decimal import Decimal
 

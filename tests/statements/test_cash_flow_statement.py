@@ -76,13 +76,17 @@ class TestCashFlowStatement:
         assert 6 == cash_flow_statement.operating_cash_flow
 
     def test_current_cash_flow(self, cash_flow_statement):
+        real_operating_cash_flow = type(cash_flow_statement).operating_cash_flow
         type(cash_flow_statement).operating_cash_flow = PropertyMock(return_value=6)
         cash_flow_statement.investing = [Decimal(4), Decimal(5), Decimal(6)]
         cash_flow_statement.financing = [Decimal(7), Decimal(8), Decimal(9)]
         assert 45 == cash_flow_statement.current_cash_flow
+        type(cash_flow_statement).operating_cash_flow = real_operating_cash_flow
 
     def test_final_cash_balance(self, cash_flow_statement):
         cash_flow_statement.orig_cash_balance = 100
+        real_current_cash_flow = type(cash_flow_statement).current_cash_flow
         type(cash_flow_statement).current_cash_flow = PropertyMock(return_value=45)
         assert 145 == cash_flow_statement.final_cash_balance
+        type(cash_flow_statement).current_cash_flow = real_current_cash_flow
 
