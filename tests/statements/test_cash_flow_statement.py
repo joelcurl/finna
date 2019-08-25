@@ -1,4 +1,5 @@
 from statements.cash_flow_statement import CashFlowStatement
+from cc.categories import *
 from tests.mocks.liabilities.timed_liability_mock import *
 from tests.mocks.cc.statement_mock import *
 from tests.mocks.paystubs.wages_mock import *
@@ -48,12 +49,11 @@ class TestCashFlowStatement:
                 transaction_mock('1970-01-01', 1),
                 transaction_mock('1970-01-02', 2),
                 transaction_mock('1970-01-03', 3),
-                transaction_mock('1970-01-03', 4),
+                transaction_mock('1970-01-03', 4, Education),
         ]
-        cc_statement_mock.transactions[-1].in_category.return_value = True # mock education expense
         cash_flow_statement.add_cc_statement(cc_statement_mock)
-        assert 6 == cash_flow_statement.operating.expenses
-        assert 4 == cash_flow_statement.investing.education
+        assert -6 == cash_flow_statement.operating.expenses
+        assert -4 == cash_flow_statement.investing.education
 
     def test_add_cc_statement_date_out_of_range(self, cash_flow_statement, cc_statement_mock):
         cc_statement_mock.transactions = [
@@ -69,7 +69,7 @@ class TestCashFlowStatement:
                 transaction_mock('1970-01-01', 7),
         ]
         cash_flow_statement.add_cc_statement(cc_statement_mock)
-        assert 7 == cash_flow_statement.operating.expenses
+        assert -7 == cash_flow_statement.operating.expenses
 
     def test_operating_cash_flow(self, cash_flow_statement):
         cash_flow_statement.operating = [Decimal(1), Decimal(2), Decimal(3)]

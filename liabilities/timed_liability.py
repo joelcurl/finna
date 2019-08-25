@@ -43,4 +43,23 @@ class TimedLiability:
     def monthly_amount(self):
         return self.amount_from(self.start_date, self.start_date + relativedelta(months=1))
 
+class AccrualBasis(TimedLiability):
+    def accrued(self, then, now):
+        return self.amount_from(then, now)
+
+class SemesterAccrualBasis(AccrualBasis):
+    def __init__(self, amount, start_date):
+        end_date = start_date + relativedelta(months=+4) # 4 months to a semester
+        super().__init__(start_date, end_date, amount)
+
+class QuarterlyAccrualBasis(AccrualBasis):
+    def __init__(self, amount, start_date):
+        end_date = start_date + relativedelta(months=+3) # 3 months to a quarter
+        super().__init__(start_date, end_date, amount)
+
+class MonthlyAccrualBasis(AccrualBasis):
+    def __init__(self, amount, start_date):
+        end_date = start_date + relativedelta(months=+1)
+        super().__init__(start_date, end_date, amount)
+
 concept_lease = TimedLiability(date.fromisoformat('2019-07-20'), date.fromisoformat('2020-01-19'), 999.00 * 6)

@@ -2,7 +2,7 @@ from .util import is_date_between
 from cc.categories import *
 from decimal import Decimal
 from taxes.tax import SingleTax as Tax
-from liabilities.accrual_basis import SemesterAccrualBasis
+from liabilities.timed_liability import SemesterAccrualBasis
 from recordclass import recordclass
 from datetime import date
 from tabulate import tabulate
@@ -35,7 +35,7 @@ class IncomeStatement:
         self.expenses.it.taxes -= paystub.taxes.total
 
     def add_timed_liability(self, liability):
-        self.expenses.ebit.o_and_a += -liability.amount_from(self.beginning, self.ending)
+        self.expenses.ebit.o_and_a -= liability.amount_from(self.beginning, self.ending)
 
     def add_cc_statement(self, statement):
         for transaction in statement.transactions:
@@ -44,7 +44,7 @@ class IncomeStatement:
                 if transaction.in_category(Automotive):
                     self.expenses.ebit.o_and_a += transaction.amount
                 elif transaction.in_category(Education):
-                    self.expenses.ebit.education += -SemesterAccrualBasis(transaction.amount).accrued(self.beginning, self.ending)
+                    self.expenses.ebit.education += SemesterAccrualBasis(transaction.amount, transaction.date).accrued(self.beginning, self.ending)
                 elif transaction.in_category(Entertainment):
                     self.expenses.ebit.discretionary += transaction.amount
                 elif transaction.in_category(Food):
