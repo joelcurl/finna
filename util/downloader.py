@@ -5,14 +5,18 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.common.exceptions import InvalidCookieDomainException
+import distutils
 import pickle
 import os
+import re
 
 class Downloader:
     def __init__(self, timeout = 10, storage_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../.selenium'))):
         self.storage_dir = storage_dir
+        self.download_dir = os.path.join(self.storage_dir, 'downloads')
         self.timeout = timeout
-        self.driver = webdriver.Firefox(options=self.default_options, firefox_profile=self.default_profile)
+        profile = self.default_profile
+        self.driver = webdriver.Firefox(options=self.default_options, firefox_profile=profile)
 
     def __del__(self):
         self.driver.quit()
@@ -36,11 +40,14 @@ class Downloader:
 
     @property
     def default_profile(self):
-        profile = FirefoxProfile(profile_directory=os.path.join(self.storage_dir, 'profile'))
+        profile = FirefoxProfile()
         profile.set_preference('browser.download.folderList', 2) # custom location
         profile.set_preference('browser.download.manager.showWhenStarting', False)
-        profile.set_preference('browser.download.dir', os.path.join(self.storage_dir, 'downloads'))
+        profile.set_preference('browser.download.dir', self.download_dir)
         profile.set_preference('browser.helperApps.alwaysAsk.force', False)
+        profile.set_preference('browser.download.useDownloadDir', True)
+        profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/comma-separated-values;charset=ISO-8859-1')
+        profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/comma-separated-values')
         return profile
 
     def screenshot(self, fpath = '/mnt/c/Users/jcurl/Documents/selenium.png'):
@@ -56,6 +63,24 @@ class Downloader:
             for cookie in cookies:
                 try:
                     self.driver.add_cookie(cookie)
-                except InvalidCookieDomainException: # ignore cookies from other sessions
+                except InvalidCookieDomainException: # ignore cookies from other domains
                     pass
+
+    def num_current_downloads(self):
+        return len([fname for fname in os.listdir(self.download_dir) if os.path.isfile(os.path.join(self.download_dir, fname))])
+
+    def find_latest_downloaded(self, pattern=None):
+        latest_mtime = None
+        latest_downloaded = None
+        if not pattern:
+            pattern = '.*'
+        for fname in os.listdir(self.download_dir):
+            fpath = os.path.join(self.download_dir, fname)
+            if not os.path.isfile(fpath) or not re.search(pattern, fname):
+                continue
+            mtime = os.path.getmtime(fpath)
+            if not latest_mtime or mtime >= latest_mtime:
+                latest_mtime = mtime
+                latest_downloaded = fpath
+        return latest_downloaded
 
