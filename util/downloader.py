@@ -1,3 +1,4 @@
+from util.timeout import timeout
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
@@ -5,6 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
 from selenium.common.exceptions import InvalidCookieDomainException
+from time import sleep
 import distutils
 import pickle
 import os
@@ -46,9 +48,16 @@ class Downloader:
         profile.set_preference('browser.download.dir', self.download_dir)
         profile.set_preference('browser.helperApps.alwaysAsk.force', False)
         profile.set_preference('browser.download.useDownloadDir', True)
-        profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/comma-separated-values;charset=ISO-8859-1')
-        profile.set_preference('browser.helperApps.neverAsk.saveToDisk', 'text/comma-separated-values')
+        profile.set_preference('browser.helperApps.neverAsk.saveToDisk', self.all_mime_types)
         return profile
+
+    @property
+    def all_mime_types(self):
+        mime_types = [
+                'text/comma-separated-values',
+                'application/x-csv',
+        ]
+        return ';'.join(mime_types)
 
     def screenshot(self, fpath = '/mnt/c/Users/jcurl/Documents/selenium.png'):
         self.driver.save_screenshot(fpath)
@@ -65,6 +74,24 @@ class Downloader:
                     self.driver.add_cookie(cookie)
                 except InvalidCookieDomainException: # ignore cookies from other domains
                     pass
+
+    def wait_for_download(self, num_previous_downloads, pattern=None):
+        last_size = 0
+        current_size = 0
+        current_downloads = self.num_current_downloads()
+        
+        with timeout(self.timeout):
+            while current_downloads <= num_previous_downloads:
+                current_downloads = self.num_current_downloads()
+        download_path = self.find_latest_downloaded(pattern)
+        current_size = os.path.getsize(download_path)
+        with timeout(self.timeout):
+            while current_size > last_size or current_size == 0:
+                last_size = current_size
+                sleep(1)
+                current_size = os.path.getsize(download_path)
+
+
 
     def num_current_downloads(self):
         return len([fname for fname in os.listdir(self.download_dir) if os.path.isfile(os.path.join(self.download_dir, fname))])
