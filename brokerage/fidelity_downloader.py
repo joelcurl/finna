@@ -6,7 +6,7 @@ class FidelityDownloader(Downloader):
     portfolio_url = 'https://oltx.fidelity.com/ftgw/fbc/oftop/portfolio'
     cc_url = 'https://oltx.fidelity.com/ftgw/fbc/ofcashmgmt/cashMgmtApp?ACCOUNT=&ACCOUNTS=&GOTO=CCT'
     statement_fname_regex = '(Portfolio_Position_.{3}-[0-9]{1,2}-[0-9]{2,4}.*\.csv)'
-    cc_statement_fname_regex = 'download.*\.csv'
+    cc_statement_fname_regex = '(download.*\.csv)'
     log_out_xpath = '//*[text()="Log Out"]'
     date_format = '{:%m/%d/%Y}'
 

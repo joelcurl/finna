@@ -56,6 +56,7 @@ class Downloader:
         mime_types = [
                 'text/comma-separated-values',
                 'application/x-csv',
+                'text/csv',
         ]
         return ';'.join(mime_types)
 
