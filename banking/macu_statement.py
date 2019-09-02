@@ -21,7 +21,7 @@ class MacuStatement:
 
     @staticmethod
     def translate_field(field):
-        return field.strip(' ').translate(str.maketrans(' ', '_'))
+        return field.strip(' ').translate(str.maketrans(' ', '_')).replace('.', '')
 
     def _calc_balances(self):
         for transaction in self.transactions:

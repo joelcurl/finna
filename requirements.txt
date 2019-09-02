@@ -8,4 +8,6 @@ sqlalchemy
 python-dateutil
 pytest
 selenium
+pykeepass
+requests
 
