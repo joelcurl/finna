@@ -4,3 +4,4 @@
 *.swp
 .selenium/*
 geckodriver.log
+.envrc

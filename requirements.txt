@@ -7,4 +7,5 @@ PyPDF4
 sqlalchemy
 python-dateutil
 pytest
+selenium
 

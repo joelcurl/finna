@@ -71,8 +71,8 @@ class MacuDownloader(Downloader):
             pass
         return False
 
-import os
-import datetime
-md = MacuDownloader(os.environ['MACU_USER'], os.environ['MACU_PASS'])
-downloads = md.download_statements(start_date=datetime.date(2019,4,1), end_date=datetime.date(2019,8,31))
-print(downloads)
+#import os
+#import datetime
+#md = MacuDownloader(os.environ['MACU_USER'], os.environ['MACU_PASS'])
+#downloads = md.download_statements(start_date=datetime.date(2019,4,1), end_date=datetime.date(2019,8,31))
+#print(downloads)
