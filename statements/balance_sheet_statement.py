@@ -36,11 +36,11 @@ class BalanceSheetStatement:
     def add_bank_statement(self, statement):
         self.assets.current.cash += statement.balance
 
-    def add_brokerage_statement_to_current(self, name, statement):
-        self.assets.current.brokerage[name] = statement.total
+    def add_brokerage_statement_to_current(self, statement):
+        self.assets.current.brokerage[statement.name] = statement.total
 
-    def add_brokerage_statement_to_noncurrent(self, name, statement):
-        self.assets.noncurrent.brokerage[name] = statement.total
+    def add_brokerage_statement_to_noncurrent(self, statement):
+        self.assets.noncurrent.brokerage[statement.name] = statement.total
 
     def add_paystub(self, paystub):
         if not is_current_date(key=paystub.employer, past_dates=self.paystub_dates, today=paystub.pay_period.end):

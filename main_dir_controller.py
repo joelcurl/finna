@@ -1,5 +1,4 @@
-from controller.directory_controller import DirectoryController, DirStructure
-from controller.directory_controller import DirStructUtil as Util
+from controller.directory_controller import DirectoryController
 from statements.balance_sheet_statement import BalanceSheetStatement
 from statements.income_statement import IncomeStatement
 from statements.cash_flow_statement import CashFlowStatement
@@ -19,7 +18,7 @@ cash_flow_statement = CashFlowStatement(then, now)
 
 
 controller = DirectoryController(balance_sheet, income_statement, cash_flow_statement)
-
+controller.discover()
 print(cash_flow_statement.to_table())
 print(balance_sheet.to_table())
 print(income_statement.to_table())

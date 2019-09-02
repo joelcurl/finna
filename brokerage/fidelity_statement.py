@@ -13,14 +13,22 @@ ACCOUNTS = {
     'HSA': '233164897',
 }
 
+TAXABLE_ACCOUNTS = ['SAVINGS', 'INVESTMENT']
+
 class FidelityAccount:
-    def __init__(self, positions):
+    def __init__(self, name, positions):
+        self.name = name
         self.positions = positions
         self._calc_current_value()
 
     @property
     def total(self):
         return sum([position.Current_Value for position in self.positions])
+
+    def is_taxable(self):
+        if self.name in TAXABLE_ACCOUNTS:
+            return True
+        return False
 
     @staticmethod
     def translate_field(field):
@@ -52,8 +60,8 @@ class FidelityStatement(FidelityAccount):
         for row in self.reader:
             row = {FidelityStatement.translate_field(key): value for key, value in row.items()}
             positions.append(self.SecurityPosition(**row))
-        super().__init__(positions)
-        self.accounts =  {account_name: FidelityAccount(self.account_positions(account_name)) for account_name in ACCOUNTS.keys()}
+        super().__init__(None, positions)
+        self.accounts =  [FidelityAccount(account_name, self.account_positions(account_name)) for account_name in ACCOUNTS.keys()]
 
     def account_positions(self, account_name):
         return [position for position in self.positions if position.Account_Name_Number == ACCOUNTS[account_name]]
@@ -61,11 +69,5 @@ class FidelityStatement(FidelityAccount):
 #with open('input/Portfolio_Position_Aug-12-2019.csv') as f:
 #    fs = FidelityStatement(f.read())
 #    print(fs.total)
-#    print(fs.accounts['SAVINGS'].total)
-#    print(fs.accounts['INVESTMENT'].total)
-#    print(fs.accounts['IRA'].total)
-#    print(fs.accounts['ROTH_IRA'].total)
-#    print(fs.accounts['IRA_401K'].total)
-#    print(fs.accounts['ESPP'].total)
-#    print(fs.accounts['HSA'].total)
-#    print(fs.accounts)
+#    for account in fs.accounts:
+#        print(f'{account.name}: {account.total}')
