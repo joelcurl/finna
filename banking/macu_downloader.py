@@ -13,11 +13,12 @@ class MacuDownloader(Downloader):
         self.username = username
         self.password = password
 
-    def download_statements(self, start_date, end_date):
+    def download_statements(self, start_date, end_date, logout_after=False):
         downloads = []
         for account in self.accounts:
             downloads += [self.download_statement(account, start_date, end_date, logout_after=False)]
-        self.logout()
+        if logout_after:
+            self.logout()
         return downloads
 
     def download_statement(self, account, start_date, end_date, logout_after=False):

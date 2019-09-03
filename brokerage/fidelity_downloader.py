@@ -1,5 +1,10 @@
 from util.downloader import Downloader
+from brokerage.fidelity_statement import ACCOUNTS
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 class FidelityDownloader(Downloader):
     login_url = 'https://login.fidelity.com/ftgw/Fidelity/RtlCust/Login/Init'
@@ -22,6 +27,12 @@ class FidelityDownloader(Downloader):
         if not self.logged_in():
             self.login()
         self.driver.get(self.portfolio_url)
+        # throbber obscures all_accounts element for a bit
+        all_accounts = WebDriverWait(self.driver, self.timeout).until(EC.element_to_be_clickable((By.XPATH, '//*[text()="All Accounts" and @class="account-selector--header-title"]')))
+        all_accounts.click()
+        for account_number in ACCOUNTS.values():
+            # wait for all accounts to be displayed so the report includes them
+            self.find_element_by_xpath(f'//*[contains(text(),"{account_number}") and (@class="magicgrid--account-title-description" or @class="magicgrid--account-title-text")]')
         download_link = self.find_element_by_xpath('//*[text()="Download"]')
         download_link.click()
         self.wait_for_download(num_initial_downloads, self.statement_fname_regex)
@@ -67,8 +78,7 @@ class FidelityDownloader(Downloader):
         username_field.send_keys(self.username)
         password_field = self.find_element_by_xpath('//*[@id="password"]')
         password_field.send_keys(self.password)
-        submit_button = self.find_element_by_xpath('//*[@id="fs-login-button"]')
-        submit_button.click()
+        password_field.send_keys(Keys.RETURN)
         self.check_login()
 
     def logout(self):
