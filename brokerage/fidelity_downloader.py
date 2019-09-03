@@ -2,8 +2,8 @@ from util.downloader import Downloader
 from selenium.common.exceptions import NoSuchElementException
 
 class FidelityDownloader(Downloader):
-    login_url = 'https://digital.fidelity.com/prgw/digital/login/full-page'
-    portfolio_url = 'https://oltx.fidelity.com/ftgw/fbc/oftop/portfolio'
+    login_url = 'https://login.fidelity.com/ftgw/Fidelity/RtlCust/Login/Init'
+    portfolio_url = 'https://oltx.fidelity.com/ftgw/fbc/oftop/portfolio#positions'
     cc_url = 'https://oltx.fidelity.com/ftgw/fbc/ofcashmgmt/cashMgmtApp?ACCOUNT=&ACCOUNTS=&GOTO=CCT'
     statement_fname_regex = '(Portfolio_Position_.{3}-[0-9]{1,2}-[0-9]{2,4}.*\.csv)'
     cc_statement_fname_regex = '(download.*\.csv)'
@@ -17,20 +17,19 @@ class FidelityDownloader(Downloader):
         self.mfa_callback = mfa_callback
         self.quick_timeout = quick_timeout
 
-    def download_brokerage_statement(self):
+    def download_brokerage_statement(self, logout_after=False):
         num_initial_downloads = self.num_current_downloads()
         if not self.logged_in():
             self.login()
         self.driver.get(self.portfolio_url)
-        positions_tab = self.find_element_by_xpath('//a[text()="Positions" and @href="#tabContentPositions"]', timeout=self.timeout*2)
-        positions_tab.click()
         download_link = self.find_element_by_xpath('//*[text()="Download"]')
         download_link.click()
         self.wait_for_download(num_initial_downloads, self.statement_fname_regex)
-        self.logout()
+        if logout_after:
+            self.logout()
         return self.find_latest_downloaded(pattern=self.statement_fname_regex)
     
-    def download_cc_statement(self, start_date, end_date):
+    def download_cc_statement(self, start_date, end_date, logout_after=False):
         num_initial_downloads = self.num_current_downloads()
         if not self.logged_in():
             self.login()
@@ -58,7 +57,8 @@ class FidelityDownloader(Downloader):
         self.driver.switch_to_window(main_window)
 
         self.wait_for_download(num_initial_downloads, self.cc_statement_fname_regex)
-        self.logout()
+        if logout_after:
+            self.logout()
         return self.find_latest_downloaded(pattern=self.cc_statement_fname_regex)
 
     def login(self):

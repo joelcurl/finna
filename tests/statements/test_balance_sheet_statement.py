@@ -24,14 +24,18 @@ class TestBalanceSheetStatement:
 
     def test_add_brokerage_statement_to_current(self, balance_sheet):
         brokerage_statement = Mock()
+        brokerage_statement.is_taxable = Mock(return_value=True)
+        type(brokerage_statement).name = PropertyMock(return_value='test account')
         type(brokerage_statement).total = 2
-        balance_sheet.add_brokerage_statement_to_current('test account', brokerage_statement)
+        balance_sheet.add_brokerage_statement(brokerage_statement)
         assert 2 == balance_sheet.assets.current.brokerage['test account']
 
     def test_add_brokerage_statement_to_noncurrent(self, balance_sheet):
         brokerage_statement = Mock()
+        brokerage_statement.is_taxable = Mock(return_value=False)
+        type(brokerage_statement).name = PropertyMock(return_value='test account')
         type(brokerage_statement).total = 3
-        balance_sheet.add_brokerage_statement_to_noncurrent('test account', brokerage_statement)
+        balance_sheet.add_brokerage_statement(brokerage_statement)
         assert 3 == balance_sheet.assets.noncurrent.brokerage['test account']
 
     def test_add_paystub(self, balance_sheet):

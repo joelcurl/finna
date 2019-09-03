@@ -20,7 +20,7 @@ class MacuDownloader(Downloader):
         self.logout()
         return downloads
 
-    def download_statement(self, account, start_date, end_date, logout_after=True):
+    def download_statement(self, account, start_date, end_date, logout_after=False):
         num_initial_downloads = self.num_current_downloads()
         if not self.logged_in():
             self.login()

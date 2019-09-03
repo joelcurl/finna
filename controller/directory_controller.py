@@ -17,7 +17,7 @@ class DirStructUtil:
 class DirStructure:
     bank_statements: str = DirStructUtil.path('../input/banking/*')
     brokerage_statements: str = DirStructUtil.path('../input/brokerage/*')
-    cc_db: str = 'sqlite:///cc/cc.db'
+    cc_db: str = 'sqlite:///:memory:'
     mcc_codes: str = DirStructUtil.path('../cc/mcc-codes/mcc_codes.csv')
     cc_statements: str = DirStructUtil.path('../input/cc/*')
     paystubs: str = DirStructUtil.path('../input/paystubs/*')
@@ -40,10 +40,7 @@ class DirectoryController(Controller):
             with open(statement) as f:
                 brokerage_accounts = self.statement_factory.brokerage(f.read())
                 for account in brokerage_accounts.accounts:
-                    if account.is_taxable():
-                        self.balance_sheet.add_brokerage_statement_to_current(account)
-                    else:
-                        self.balance_sheet.add_brokerage_statement_to_noncurrent(account)
+                    self.balance_sheet.add_brokerage_statement(account)
 
     def discover_paystubs(self):
         for paystub_statement in glob(self.dir_structure.paystubs):

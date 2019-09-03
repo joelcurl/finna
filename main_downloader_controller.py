@@ -18,6 +18,8 @@ cash_flow_statement = CashFlowStatement(then, now)
 
 
 controller = DownloaderController(balance_sheet, income_statement, cash_flow_statement)
+controller.discover_brokerage_statements()
+controller.discover_cc_statements()
 controller.discover_bank_statements()
 print(cash_flow_statement.to_table())
 print(balance_sheet.to_table())
