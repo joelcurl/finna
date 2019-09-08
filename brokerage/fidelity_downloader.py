@@ -8,11 +8,11 @@ from selenium.webdriver.common.by import By
 
 class FidelityDownloader(Downloader):
     login_url = 'https://login.fidelity.com/ftgw/Fidelity/RtlCust/Login/Init'
+    logout_url = 'https://login.fidelity.com/ftgw/Fidelity/RtlCust/Logout/Init?AuthRedUrl=https://www.fidelity.com/customer-service/customer-logout'
     portfolio_url = 'https://oltx.fidelity.com/ftgw/fbc/oftop/portfolio#positions'
     cc_url = 'https://oltx.fidelity.com/ftgw/fbc/ofcashmgmt/cashMgmtApp?ACCOUNT=&ACCOUNTS=&GOTO=CCT'
     statement_fname_regex = '(Portfolio_Position_.{3}-[0-9]{1,2}-[0-9]{2,4}.*\.csv)'
     cc_statement_fname_regex = '(download.*\.csv)'
-    log_out_xpath = '//*[text()="Log Out"]'
     date_format = '{:%m/%d/%Y}'
 
     def __init__(self, username, password, mfa_callback, quick_timeout = 5):
@@ -28,8 +28,14 @@ class FidelityDownloader(Downloader):
             self.login()
         self.driver.get(self.portfolio_url)
         # throbber obscures all_accounts element for a bit
-        all_accounts = WebDriverWait(self.driver, self.timeout).until(EC.element_to_be_clickable((By.XPATH, '//*[text()="All Accounts" and @class="account-selector--header-title"]')))
-        all_accounts.click()
+        all_accounts = self.find_element_by_xpath('//*[text()="All Accounts" and @class="account-selector--header-title"]')
+        try:
+            all_accounts.click()
+        except:
+            from time import sleep
+            sleep(3) # todo what is up with this //div[@class="progress-bar"] thing in the way?
+            all_accounts.click()
+            sleep(3) # todo not this
         for account_number in ACCOUNTS.values():
             # wait for all accounts to be displayed so the report includes them
             self.find_element_by_xpath(f'//*[contains(text(),"{account_number}") and (@class="magicgrid--account-title-description" or @class="magicgrid--account-title-text")]')
@@ -74,6 +80,8 @@ class FidelityDownloader(Downloader):
 
     def login(self):
         self.driver.get(self.login_url)
+        remember_me = self.find_element_by_xpath('//*[@id="confirm"]')
+        remember_me.click()
         username_field = self.find_element_by_xpath('//*[@id="userId-input"]')
         username_field.send_keys(self.username)
         password_field = self.find_element_by_xpath('//*[@id="password"]')
@@ -83,38 +91,35 @@ class FidelityDownloader(Downloader):
 
     def logout(self):
         if self.logged_in():
-            log_out_link = self.find_element_by_xpath(self.log_out_xpath)
-            log_out_link.click()
-            self.find_element_by_xpath('//*[text()="Login"]') # wait until logged out
+            self.driver.get(self.logout_url)
 
     def check_login(self):
         if not self.logged_in():
             self.mfa_login()
-        self.logged_in() # wait until logged in
 
     def logged_in(self):
         try:
-            self.find_element_by_xpath(self.log_out_xpath)
-            return True
+            if self.find_element_by_xpath('//*[text()="Log Out"]'):
+                return True
         except:
             pass
         return False
 
     def mfa_login(self):
         self.find_element_by_xpath('//*[@id="step-challenge"]', timeout = self.quick_timeout) # sanity check
-        next_button = self.find_element_by_xpath('//button[text()="Next"]')
+        next_button = self.find_element_by_xpath('//*[@id="step-challenge"]//*//button[text()="Next"]')
         next_button.click()
         sms_radio = self.find_element_by_xpath('//*[@id="channel-label-sms"]')
         sms_radio.click()
-        next_button = self.find_element_by_xpath('//button[text()="Next"]')
+        next_button = self.find_element_by_xpath('//*[@id="step-selectChannel"]//*//button[text()="Next"]')
         next_button.click()
         code_input_field = self.find_element_by_xpath('//*[@id="code"]')
         code_input_field.send_keys(self.mfa_callback())
         remember_checkbox = self.find_element_by_xpath('//*[@id="saveDevice"]')
         remember_checkbox.click()
-        next_button = self.find_element_by_xpath('//button[text()="Next"]')
+        next_button = self.find_element_by_xpath('//*[@id="validateCodeForm"]//*//button[text()="Next"]')
         next_button.click()
-        self.logged_in() # wait until logged in
+        self.check_login()
 
 #import os
 #import datetime

@@ -27,12 +27,9 @@ class Downloader:
         if not timeout:
             timeout = self.timeout
         WebDriverWait(self.driver, timeout).until(expected_conditions.presence_of_element_located((By.XPATH, xpath)))
-        elements = self.driver.find_elements_by_xpath(xpath)
-        for element in elements:
-            if element.is_displayed():
-                return element
-        if len(elements) > 0:
-            return elements[0]
+        WebDriverWait(self.driver, timeout).until(expected_conditions.visibility_of_element_located((By.XPATH, xpath)))
+        WebDriverWait(self.driver, timeout).until(expected_conditions.element_to_be_clickable((By.XPATH, xpath)))
+        return self.driver.find_element_by_xpath(xpath)
 
     @property
     def default_options(self):
