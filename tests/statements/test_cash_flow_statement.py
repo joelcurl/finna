@@ -4,7 +4,7 @@ from tests.mocks.liabilities.timed_liability_mock import *
 from tests.mocks.cc.statement_mock import *
 from tests.mocks.paystubs.wages_mock import *
 from unittest.mock import PropertyMock
-from pytest import fixture
+from pytest import fixture, approx
 from decimal import Decimal
 
 @fixture(params=[('1970-01-01', '1971-07-31')])
@@ -40,9 +40,9 @@ class TestCashFlowStatement:
 
     def test_add_timed_liability(self, cash_flow_statement, timed_liability_mock):
         cash_flow_statement.add_timed_liability(timed_liability_mock)
-        exp_months = 18
+        exp_months = 19
         exp_amount = -(exp_months * timed_liability_mock.monthly_amount_mock.return_value)
-        assert exp_amount == cash_flow_statement.operating.expenses
+        assert exp_amount == approx(cash_flow_statement.operating.expenses, Decimal(0.01))
 
     def test_add_cc_statement(self, cash_flow_statement, cc_statement_mock):
         cc_statement_mock.transactions = [

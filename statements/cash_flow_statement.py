@@ -3,7 +3,6 @@ from cc.categories import Education
 from recordclass import recordclass
 from decimal import Decimal
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 from tabulate import tabulate
 
 class CashFlowStatement:
@@ -32,8 +31,11 @@ class CashFlowStatement:
 
     def add_timed_liability(self, liability):
         # assume monthly payments
-        delta = relativedelta(self.ending, self.beginning)
-        months = delta.years * 12 + delta.months
+        days_in_year = Decimal(365)
+        months_in_year = Decimal(12)
+        delta = self.ending - self.beginning
+        years = delta.days / days_in_year
+        months = years * months_in_year
         self.operating.expenses += months * -liability.monthly_amount
 
     def add_cc_statement(self, statement):
