@@ -42,11 +42,11 @@ class Controller:
         self.statement_factory = statement_factory
 
     def discover(self):
-        self.discover_bank_statements()
         self.discover_brokerage_statements()
+        self.discover_cc_statements()
+        self.discover_bank_statements()
         self.discover_paystubs()
         self.discover_properties()
-        self.discover_cc_statements()
         self.discover_liabilities()
 
     def discover_liabilities(self):
