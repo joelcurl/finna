@@ -1,7 +1,9 @@
 from util.downloader import Downloader
+import requests
 
 class MacuDownloader(Downloader):
     login_url = 'https://o.macu.com/Authentication'
+    logout_url = 'https://o.macu.com/Logout'
     accounts_url = 'https://o.macu.com/MyAccountsV2'
     statement_fname_regex = '(ExportedTransactions.*\.csv)'
     log_out_xpath = '//*[@href="/Logout"]'
@@ -60,9 +62,8 @@ class MacuDownloader(Downloader):
 
     def logout(self):
         if self.logged_in():
-            log_out_link = self.find_element_by_xpath(self.log_out_xpath)
-            log_out_link.click()
-            self.find_element_by_xpath('//*[text()="Log in"]') # wait until logged out
+            self.driver.get(self.logout_url)
+            self.find_element_by_xpath('//*[contains(., "Log in")]') # wait until logged out
 
     def logged_in(self):
         try:
@@ -72,8 +73,3 @@ class MacuDownloader(Downloader):
             pass
         return False
 
-#import os
-#import datetime
-#md = MacuDownloader(os.environ['MACU_USER'], os.environ['MACU_PASS'])
-#downloads = md.download_statements(start_date=datetime.date(2019,4,1), end_date=datetime.date(2019,8,31))
-#print(downloads)

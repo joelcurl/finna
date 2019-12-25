@@ -5,7 +5,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.firefox_profile import FirefoxProfile
-from selenium.common.exceptions import InvalidCookieDomainException
+from selenium.common.exceptions import InvalidCookieDomainException, WebDriverException
 from time import sleep
 import distutils
 import pickle
@@ -18,7 +18,13 @@ class Downloader:
         self.download_dir = os.path.join(self.storage_dir, 'downloads')
         self.timeout = timeout
         profile = self.default_profile
-        self.driver = webdriver.Firefox(options=self.default_options, firefox_profile=profile)
+        try:
+            self.driver = webdriver.Firefox(options=self.default_options, firefox_profile=profile)
+        except WebDriverException as e:
+            print('Could not fire up graphical env, trying headless (is X11 running?)')
+            options = self.default_options
+            options.headless = True
+            self.driver = webdriver.Firefox(options=options, firefox_profile=profile)
 
     def __del__(self):
         self.driver.quit()
@@ -34,7 +40,6 @@ class Downloader:
     @property
     def default_options(self):
         options = Options()
-        #options.headless = True # todo undo
         return options
 
     @property

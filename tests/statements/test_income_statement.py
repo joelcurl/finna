@@ -10,7 +10,7 @@ from decimal import Decimal
 def income_statement(request):
     return IncomeStatement(beginning=request.param[0], ending=request.param[1])
 
-class TestCashFlowStatement:
+class TestIncomeStatement:
     def test_add_paystub(self, income_statement):
         paystub = paystub_mock('1970-01-01', '1970-02-01')
         paystub.earnings = earnings_mock(wages=100, bonuses=20)
