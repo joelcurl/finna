@@ -121,11 +121,3 @@ class FidelityDownloader(Downloader):
         next_button.click()
         self.check_login()
 
-#import os
-#import datetime
-#fd = FidelityDownloader(os.environ['FIDELITY_USER'], os.environ['FIDELITY_PASS'], lambda: input('MFA code: '))
-#brokerage_statement_fname = fd.download_brokerage_statement()
-#print(brokerage_statement_fname)
-#cc_statement_fname = fd.download_cc_statement(start_date=datetime.date(2019,4,1), end_date=datetime.date(2019,8,31))
-#print(cc_statement_fname)
-
