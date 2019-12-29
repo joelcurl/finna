@@ -27,6 +27,3 @@ class MacuStatement:
         for transaction in self.transactions:
             transaction.Balance = Decimal(transaction.Balance)
 
-#with open('input/ExportedTransactions.csv') as f:
-#    ms = MacuStatement(f.read())
-#    print(ms.balance)

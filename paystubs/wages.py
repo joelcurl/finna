@@ -101,9 +101,13 @@ class AcmePaystub:
     def __parse_earnings(self):
         line_items = self.__parse_cur_ytd_named_line_items([
             'Salary',
-            'Extra Compensation',
             'Total Taxable Earnings',
             ])
+        extra_comp = self.__parse_cur_repeated_ytd_named_line_items(['Extra Compensation'])
+        nontax_earnings = self.__find_cur_ytd_named_pair('Total NonTax Earnings')
+        extra_comp = self.__merge_line_items([extra_comp, nontax_earnings])
+        line_items.insert(1, extra_comp)
+
         net_pay = {'Net Pay': {'current': self.__find_named_val('Total Net'), 'ytd': self.__find_named_val('YTD Net')}}
         line_items.append(net_pay)
         return {'current': Earnings(*self.__current(line_items)), 'ytd': Earnings(*self.__ytd(line_items))}
@@ -152,10 +156,27 @@ class AcmePaystub:
 
     def __parse_cur_ytd_named_line_items(self, items):
         return [self.__find_cur_ytd_named_pair(line) for line in items]
+    
+    def __parse_cur_repeated_ytd_named_line_items(self, line_items_repeated):
+        parsed = {}
+        for repeated_line_item in line_items_repeated:
+            vals = Decimal(sum([Decimal(num) for num in self.__find_named_vals(repeated_line_item)]))
+            ytd = self.__find_cur_ytd_named_pair(repeated_line_item)[repeated_line_item]['ytd']
+            parsed[repeated_line_item] = {'current': str(vals), 'ytd': ytd}
+        return parsed
 
     def __parse_pay_period(self):
         pay_periods = re.search('Pay Period:\s.+?(?P<start>[0-9\/]+)[\s-]+?(?P<end>[0-9\/]+)', self.parse_str).groupdict()
         return {key: datetime.strptime(value, '%m/%d/%Y').date() for key, value in pay_periods.items()}
+
+    def __merge_line_items(self, items):
+        title = [*(items[0].keys())][0]
+        cur = Decimal(0)
+        ytd = Decimal(0)
+        for item in items:
+            cur += sum([Decimal(line['current'].replace(',', '')) for line in item.values()])
+            ytd += sum([Decimal(line['ytd'].replace(',', '')) for line in item.values()])
+        return {title: {'current': str(cur), 'ytd': str(ytd)}}
 
     def __current(self, items):
         return [{k: self.__to_decimal(v['current']) for k,v in item.items()} for item in items]
@@ -183,9 +204,21 @@ class AcmePaystub:
         matches = re.findall(f'{name}\s+(?P<current>[\d,\.]+)\s+(?P<ytd>[\d,\.]+)', self.parse_str)
         return {name: {'current': matches[n][0], 'ytd': matches[n][1]}}
 
-    def __find_named_val(self, name):
+    def __find_cur_cur_ytd_named_pair(self, name):
         try:
-            return re.search(f'{name}\s+([\d,\.]+)', self.parse_str).groups()[0]
+            return {name: re.search}
+            pass
+        except AttributeError:
+            return self.__find_cur_ytd_named_pair(name)
+
+    def __find_named_val(self, name):
+        return self.__find_named_val_nth_match(name, 0)
+
+    def __find_named_val_nth_match(self, name, n):
+        return self.__find_named_vals(name)[n]
+        
+    def __find_named_vals(self, name):
+        try:
+            return re.findall(f'{name}\s+([\d,\.]+)', self.parse_str)
         except AttributeError:
             raise LookupError(f'Could not find {name}')
-
