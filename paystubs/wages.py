@@ -100,12 +100,23 @@ class AcmePaystub:
 
     def __parse_earnings(self):
         line_items = self.__parse_cur_ytd_named_line_items([
-            'Salary',
             'Total Taxable Earnings',
             ])
-        extra_comp = self.__parse_cur_repeated_ytd_named_line_items(['Extra Compensation'])
+        salary = self.__parse_cur_repeated_ytd_named_line_items(['Salary'])
+        line_items.insert(0, salary)
+
+        total_taxable = line_items[-1]
+        salary = line_items[0]
+        extra_comp = {'Extra Compensation': self.__sub_line_items([total_taxable, salary])}
+
         nontax_earnings = self.__find_cur_ytd_named_pair('Total NonTax Earnings')
+        if(Decimal(nontax_earnings['Total NonTax Earnings']['ytd'].replace(',', '')) == 0):
+            try:
+                nontax_earnings['Total NonTax Earnings']['ytd'] = str(Decimal(nontax_earnings['Total NonTax Earnings']['ytd'].replace(',', '')) + Decimal(self.__find_named_val('Total NonTax Earnings').replace(',', '')))
+            except LookupError:
+                pass
         extra_comp = self.__merge_line_items([extra_comp, nontax_earnings])
+
         line_items.insert(1, extra_comp)
 
         net_pay = {'Net Pay': {'current': self.__find_named_val('Total Net'), 'ytd': self.__find_named_val('YTD Net')}}
@@ -141,9 +152,9 @@ class AcmePaystub:
         return {'current': Deductions(pretax['current'], posttax['current']), 'ytd': Deductions(pretax['ytd'], posttax['ytd'])}
 
     def __parse_taxes(self):
-        try:
+        if not self.__has_nontax_earnings_section():
             line_items = [{'Taxable Wages': self.__find_cur_ytd_pair('Note:')}]
-        except LookupError:
+        else:
             line_items = [{'Taxable Wages': self.__find_cur_ytd_pair('-*\s*Total NonTax Earnings')}]
         line_items += [self.__find_cur_ytd_named_pair_nth_match('TX Withholding Tax', 1)]
         line_items += self.__parse_cur_ytd_named_line_items([
@@ -160,7 +171,7 @@ class AcmePaystub:
     def __parse_cur_repeated_ytd_named_line_items(self, line_items_repeated):
         parsed = {}
         for repeated_line_item in line_items_repeated:
-            vals = Decimal(sum([Decimal(num) for num in self.__find_named_vals(repeated_line_item)]))
+            vals = Decimal(sum([Decimal(num_str.replace(',', '')) for num_str in self.__find_named_vals(repeated_line_item)]))
             ytd = self.__find_cur_ytd_named_pair(repeated_line_item)[repeated_line_item]['ytd']
             parsed[repeated_line_item] = {'current': str(vals), 'ytd': ytd}
         return parsed
@@ -168,6 +179,16 @@ class AcmePaystub:
     def __parse_pay_period(self):
         pay_periods = re.search('Pay Period:\s.+?(?P<start>[0-9\/]+)[\s-]+?(?P<end>[0-9\/]+)', self.parse_str).groupdict()
         return {key: datetime.strptime(value, '%m/%d/%Y').date() for key, value in pay_periods.items()}
+
+    def __sub_line_items(self, items):
+        op1 = items[0]
+        others = items[1:]
+        cur = sum([Decimal(line['current'].replace(',', '')) for line in op1.values()])
+        ytd = sum([Decimal(line['ytd'].replace(',', '')) for line in op1.values()])
+        for item in others:
+            cur -= sum([Decimal(line['current'].replace(',','')) for line in item.values()])
+            ytd -= sum([Decimal(line['ytd'].replace(',','')) for line in item.values()])
+        return {'current': str(cur), 'ytd': str(ytd)}
 
     def __merge_line_items(self, items):
         title = [*(items[0].keys())][0]
@@ -186,6 +207,9 @@ class AcmePaystub:
 
     def __to_decimal(self, val):
         return Decimal(val.replace(',', ''))
+
+    def __has_nontax_earnings_section(self):
+        return re.search('Total NonTax Earnings', self.parse_str)
 
     def __find_cur_ytd_pair(self, lookahead):
         try:

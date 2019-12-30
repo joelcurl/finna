@@ -11,7 +11,6 @@ def pytest_generate_tests(metafunc):
     base_dir = os.path.join(os.path.dirname(__file__), 'input')
     paystubs = glob(os.path.join(base_dir, '*.pdf'))
     paystubs.sort()
-    del paystubs[9:] # todo undo
     expected_vals_fpath = os.path.join(base_dir, 'expected_vals.csv')
     metafunc.parametrize('paystub_fpath,expected_vals_fpath,expected_vals_row',
             [(paystub_fpath, expected_vals_fpath, i) for i, paystub_fpath in enumerate(paystubs)]
