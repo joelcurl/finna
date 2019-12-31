@@ -5,8 +5,9 @@ from tests.mocks.cc.statement_mock import *
 from tests.mocks.paystubs.wages_mock import *
 from pytest import fixture, mark
 from decimal import Decimal
+from datetime import date
 
-@fixture(params=[('1970-01-01', '1971-07-31')])
+@fixture(params=[(date.fromisoformat('1970-01-01'), date.fromisoformat('1971-07-31'))])
 def income_statement(request):
     return IncomeStatement(beginning=request.param[0], ending=request.param[1])
 

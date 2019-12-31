@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+from controller.controller_composite import ControllerComposite, CompositeFactory
+from statements.balance_sheet_statement import BalanceSheetStatement
+from statements.income_statement import IncomeStatement
+from statements.cash_flow_statement import CashFlowStatement
+from datetime import date
+from dateutil.relativedelta import relativedelta
+import decimal
+from argparse import ArgumentParser
+
+decimal.getcontext().prec = 6 # to avoid printing too many decimal places
+
+def parse_args():
+    parser = ArgumentParser(description='Produce accounting statements for personal accounts')
+    parser.add_argument('-s', '--start', dest='start_date', help='Start date in iso8601',
+            type=date.fromisoformat, default=date.today())
+    parser.add_argument('-e', '--end', dest='end_date', help='End date in iso8601',
+            type=date.fromisoformat, default=(date.today() - relativedelta(months=1)))
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    args = parse_args()
+    balance_sheet = BalanceSheetStatement(args.end_date, args.start_date)
+    income_statement = IncomeStatement(args.end_date, args.start_date)
+    cash_flow_statement = CashFlowStatement(args.end_date, args.start_date)
+
+    composite_factory = CompositeFactory(balance_sheet, income_statement, cash_flow_statement)
+    controller = ControllerComposite(composite_factory)
+    controller.discover()
+
+    print(cash_flow_statement.to_table())
+    print(balance_sheet.to_table())
+    print(income_statement.to_table())
+

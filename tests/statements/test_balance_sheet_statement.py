@@ -10,8 +10,9 @@ from copy import deepcopy
 from dateutil.relativedelta import relativedelta
 from pytest import fixture, mark
 from decimal import Decimal
+from datetime import date
 
-@fixture(params=[('1970-01-01', '1971-07-31')])
+@fixture(params=[(date.fromisoformat('1970-01-01'), date.fromisoformat('1971-07-31'))])
 def balance_sheet(request):
     return BalanceSheetStatement(then=request.param[0], now=request.param[1])
 

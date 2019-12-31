@@ -17,8 +17,8 @@ class BalanceSheetStatement:
     TaxLiabilities = recordclass('TaxLiabilities', 'federal_tax_ytd state_tax_ytd')
 
     def __init__(self, then, now):
-        self.then = date.fromisoformat(then)
-        self.now = date.fromisoformat(now)
+        self.then = then
+        self.now = now
         self.assets = self.Assets(
                 self.CurrentAssets(Decimal(0), {}),
                 self.NoncurrentAssets({}, self.TaxAssets(Decimal(0), Decimal(0)), Decimal(0))

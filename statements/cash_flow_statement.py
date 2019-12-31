@@ -11,8 +11,8 @@ class CashFlowStatement:
     FinancingActivities = recordclass('FinancingActivities', 'loans')
 
     def __init__(self, beginning, ending):
-        self.beginning = datetime.fromisoformat(beginning).date()
-        self.ending = datetime.fromisoformat(ending).date()
+        self.beginning = beginning
+        self.ending = ending
         self.orig_cash_balance = Decimal(0)
         self.operating = self.OperatingActivities(Decimal(0), Decimal(0), Decimal(0), Decimal(0), Decimal(0))
         self.investing = self.InvestingActivities(Decimal(0), Decimal(0))

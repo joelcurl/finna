@@ -6,8 +6,9 @@ from tests.mocks.paystubs.wages_mock import *
 from unittest.mock import PropertyMock
 from pytest import fixture, approx
 from decimal import Decimal
+from datetime import date
 
-@fixture(params=[('1970-01-01', '1971-07-31')])
+@fixture(params=[(date.fromisoformat('1970-01-01'), date.fromisoformat('1971-07-31'))])
 def cash_flow_statement(request):
     return CashFlowStatement(beginning=request.param[0], ending=request.param[1])
 

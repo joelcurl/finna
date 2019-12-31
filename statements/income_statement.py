@@ -14,8 +14,8 @@ class IncomeStatement:
     Expenses = recordclass('Expenses', 'ebit it')
 
     def __init__(self, beginning, ending):
-        self.beginning = date.fromisoformat(beginning)
-        self.ending = date.fromisoformat(ending)
+        self.beginning = beginning
+        self.ending = ending
 
         self.revenue = self.Revenue(Decimal(0), Decimal(0), Decimal(0))
         self.expenses = self.Expenses(
