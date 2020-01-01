@@ -63,6 +63,9 @@ class BalanceSheetStatement:
         for transaction in statement.transactions:
             if self.then <= transaction.date and transaction.date <= self.now:
                 self.liabilities.current.credit[statement.creditor] += transaction.amount
+        for payment in statement.payments:
+            if self.then <= payment.date and payment.date <= self.now:
+                self.liabilities.current.credit[statement.creditor] += payment.amount
 
     def add_timed_liability(self, lease):
         self.liabilities.current.leases += -lease.amount_remaining(self.now)

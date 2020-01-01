@@ -10,12 +10,17 @@ class CcStatement:
         self.groups = categories
         self.cc_reader = cc_reader
         self.transactions = self.cc_reader.visa_transactions
+        self.payments = self.cc_reader.payments
         self.mcc_reader = mcc_reader
         self.db.add_many(self.mcc_reader.codes)
 
     @property
     def total(self):
         return sum([transaction.amount for transaction in self.transactions])
+
+    @property
+    def payments_total(self):
+        return sum([payment.amount for payment in self.payments])
 
     @property
     def start(self):

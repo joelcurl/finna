@@ -100,8 +100,22 @@ class TestBalanceSheetStatement:
                 transaction_mock('1970-01-06', 6),
                 transaction_mock('1970-01-07', 7),
         ]
+        cc_statement_mock.payments = []
         balance_sheet.add_cc_statement(cc_statement_mock)
         assert -18 == sum(balance_sheet.liabilities.current.credit.values())
+        
+    def test_add_cc_statement_with_payments(self, balance_sheet, cc_statement_mock):
+        cc_statement_mock.transactions = [
+                transaction_mock('1970-01-05', 5),
+                transaction_mock('1970-01-06', 6),
+                transaction_mock('1970-01-07', 7),
+        ]
+        cc_statement_mock.payments = [
+                transaction_mock('1970-01-06', -8),
+                transaction_mock('1970-01-07', -9),
+        ]
+        balance_sheet.add_cc_statement(cc_statement_mock)
+        assert -1 == sum(balance_sheet.liabilities.current.credit.values())
 
     def test_add_cc_statement_duplicate_statement(self, balance_sheet, cc_statement_mock):
         cc_statement_mock.transactions = [
@@ -109,6 +123,7 @@ class TestBalanceSheetStatement:
                 transaction_mock('1970-01-06', 6),
                 transaction_mock('1970-01-07', 7),
         ]
+        cc_statement_mock.payments = []
         balance_sheet.add_cc_statement(cc_statement_mock)
         balance_sheet.add_cc_statement(cc_statement_mock)
         assert -18 == sum(balance_sheet.liabilities.current.credit.values())
@@ -119,6 +134,7 @@ class TestBalanceSheetStatement:
                 transaction_mock('1970-01-06', 6),
                 transaction_mock('1970-01-07', 7),
         ]
+        cc_statement_mock.payments = []
         cc_statement1 = deepcopy(cc_statement_mock)
         type(cc_statement1).creditor = PropertyMock(return_value='dr. evil')
         balance_sheet.add_cc_statement(cc_statement1)
@@ -135,6 +151,7 @@ class TestBalanceSheetStatement:
                 transaction_mock('1970-01-06', 6),
                 transaction_mock('1970-01-07', 7),
         ]
+        cc_statement_mock.payments = []
         balance_sheet.add_cc_statement(cc_statement_mock)
 
         cc_statement_mock.transactions = [
@@ -152,6 +169,7 @@ class TestBalanceSheetStatement:
                 transaction_mock('1970-01-06', 6),
                 transaction_mock('1970-01-07', 7),
         ]
+        cc_statement_mock.payments = []
         type(cc_statement_mock).end = PropertyMock(return_value=balance_sheet.now)
         balance_sheet.add_cc_statement(cc_statement_mock)
 

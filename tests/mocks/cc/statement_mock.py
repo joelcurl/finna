@@ -36,6 +36,10 @@ def cc_statement_mock(creditor = 'Acme', end = '1970-02-01'):
     type(mock).total = total_mock
     mock.total_mock = total_mock
 
+    payments_total_mock = PropertyMock(side_effect=lambda: sum([payment.amount for payment in mock.payments]))
+    type(mock).payments_total = payments_total_mock
+    mock.payments_total_mock = payments_total_mock
+
     end_mock = PropertyMock(return_value=datetime.fromisoformat(end).date())
     type(mock).end = end_mock
     mock.end_mock = end_mock
