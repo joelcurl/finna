@@ -13,5 +13,6 @@ class StaticLiability:
         return self.amount
 
 education_liabilities = [
-    StaticLiability(Decimal(2681.80), datetime.fromisoformat('2019-08-04').date() + relativedelta(years=+1))
+    StaticLiability(Decimal(2681.80), datetime.fromisoformat('2019-08-04').date() + relativedelta(years=+1)),
+    StaticLiability(Decimal(1360.29), datetime.fromisoformat('2019-10-27').date() + relativedelta(years=+1)),
 ]

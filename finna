@@ -7,23 +7,49 @@ from statements.cash_flow_statement import CashFlowStatement
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import decimal
-from argparse import ArgumentParser
+from argparse import ArgumentParser, FileType
 
 decimal.getcontext().prec = 6 # to avoid printing too many decimal places
 
 def parse_args():
+    today = date.today()
     parser = ArgumentParser(description='Produce accounting statements for personal accounts')
-    parser.add_argument('-s', '--start', dest='start_date', help='Start date in iso8601',
-            type=date.fromisoformat, default=date.today())
     parser.add_argument('-e', '--end', dest='end_date', help='End date in iso8601',
-            type=date.fromisoformat, default=(date.today() - relativedelta(months=1)))
-    return parser.parse_args()
+            type=date.fromisoformat, default=today)
+
+    end_date = parser.parse_known_args()[0].end_date
+    month_start = end_date - relativedelta(months=1)
+    quarter_start = end_date - relativedelta(months=3)
+    year_start = end_date - relativedelta(years=1)
+   
+    range_group = parser.add_mutually_exclusive_group()
+    range_group.add_argument('-s', '--start', dest='start_date', help='Start date in iso8601',
+            type=date.fromisoformat, default=month_start)
+    range_group.add_argument('-m', '--monthly', dest='is_monthly', help='Prepare monthly statement starting from today', action='store_true')
+    range_group.add_argument('-q', '--quarterly', dest='is_quarterly', help='Prepare quarterly statement starting from today', action='store_true')
+    range_group.add_argument('-a', '--annually', dest='is_annually', help='Prepare annual statement starting from today', action='store_true')
+    opts = parser.parse_known_args()[0]
+
+    start_date = opts.start_date
+    if opts.is_monthly:
+        start_date = month_start
+    elif opts.is_quarterly:
+        start_date = quarter_start
+    elif opts.is_annually:
+        start_date = year_start
+
+    parser.add_argument('-o', '--output', dest='out_fname', help='Write results to this file',
+            type=FileType('w'), default=f'{start_date}-to-{end_date}.out')
+
+    opts = parser.parse_args()
+    opts.start_date = start_date
+    return opts
 
 if __name__ == "__main__":
     args = parse_args()
-    balance_sheet = BalanceSheetStatement(args.end_date, args.start_date)
-    income_statement = IncomeStatement(args.end_date, args.start_date)
-    cash_flow_statement = CashFlowStatement(args.end_date, args.start_date)
+    balance_sheet = BalanceSheetStatement(args.start_date, args.end_date)
+    income_statement = IncomeStatement(args.start_date, args.end_date)
+    cash_flow_statement = CashFlowStatement(args.start_date, args.end_date)
 
     composite_factory = CompositeFactory(balance_sheet, income_statement, cash_flow_statement)
     controller = ControllerComposite(composite_factory)
@@ -32,4 +58,11 @@ if __name__ == "__main__":
     print(cash_flow_statement.to_table())
     print(balance_sheet.to_table())
     print(income_statement.to_table())
+
+    out_fname = args.out_fname
+    out_fname.write(cash_flow_statement.to_table())
+    out_fname.write(balance_sheet.to_table())
+    out_fname.write(income_statement.to_table())
+    out_fname.close()
+
 

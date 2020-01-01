@@ -5,6 +5,8 @@ from statements.balance_sheet_statement import BalanceSheetStatement
 from statements.income_statement import IncomeStatement
 from statements.cash_flow_statement import CashFlowStatement
 from dataclasses import dataclass
+from yaspin import yaspin
+from yaspin.spinners import Spinners
 
 @dataclass
 class CompositeFactory:
@@ -61,20 +63,27 @@ class ControllerComposite(Controller):
     def __init__(self, composite_factory):
         self.composite_factory = composite_factory
 
+    @yaspin(Spinners.bouncingBall, text='discovering bank statements')
     def discover_bank_statements(self):
         return self.composite_factory.bank_controller.discover_bank_statements()
 
+    @yaspin(Spinners.bouncingBall, text='discovering brokerage statements')
     def discover_brokerage_statements(self):
         return self.composite_factory.brokerage_controller.discover_brokerage_statements()
 
+    @yaspin(Spinners.bouncingBall, text='discovering paystubs')
     def discover_paystubs(self):
         return self.composite_factory.paystub_controller.discover_paystubs()
 
+    @yaspin(Spinners.bouncingBall, text='discovering real property')
     def discover_properties(self):
         return self.composite_factory.properties_controller.discover_properties()
 
+    @yaspin(Spinners.bouncingBall, text='discovering credit card statements')
     def discover_cc_statements(self):
         return self.composite_factory.cc_controller.discover_cc_statements()
 
+    @yaspin(Spinners.bouncingBall, text='discovering liabilities')
     def discover_liabilities(self):
         return self.composite_factory.liabilities_controller.discover_liabilities()
+

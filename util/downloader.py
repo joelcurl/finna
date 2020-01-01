@@ -11,6 +11,7 @@ import distutils
 import pickle
 import os
 import re
+from sys import stderr
 
 class Downloader:
     def __init__(self, timeout = 10, storage_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../.selenium'))):
@@ -21,7 +22,7 @@ class Downloader:
         try:
             self.driver = webdriver.Firefox(options=self.default_options, firefox_profile=profile)
         except WebDriverException as e:
-            print('Could not fire up graphical env, trying headless (is X11 running?)')
+            print('Could not fire up graphical env, trying headless (is X11 running?)', file=stderr)
             options = self.default_options
             options.headless = True
             self.driver = webdriver.Firefox(options=options, firefox_profile=profile)

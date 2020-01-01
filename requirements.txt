@@ -10,4 +10,5 @@ pytest
 selenium
 pykeepass
 requests
+yaspin
 

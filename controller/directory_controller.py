@@ -43,7 +43,9 @@ class DirectoryController(Controller):
                     self.balance_sheet.add_brokerage_statement(account)
 
     def discover_paystubs(self):
-        for paystub_statement in glob(self.dir_structure.paystubs):
+        paystubs = glob(self.dir_structure.paystubs)
+        paystubs.sort()
+        for paystub_statement in paystubs:
             with open(paystub_statement, 'rb') as f:
                 paystub = self.statement_factory.paystub(f)
                 self.cash_flow_statement.add_paystub(paystub)
