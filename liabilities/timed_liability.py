@@ -62,5 +62,8 @@ class MonthlyAccrualBasis(AccrualBasis):
         end_date = start_date + relativedelta(months=+1)
         super().__init__(start_date, end_date, amount)
 
-concept_lease = TimedLiability(date.fromisoformat('2019-07-20'), date.fromisoformat('2020-01-19'), 999.00 * 6)
+real_estate_leases = [
+        TimedLiability(date.fromisoformat('2019-07-20'), date.fromisoformat('2020-01-31'), 999.00 * 6),
+        TimedLiability(date.fromisoformat('2019-02-01'), date.fromisoformat('2021-02-28'), 1037.00 * 13),
+        ]
 

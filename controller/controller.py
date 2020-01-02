@@ -5,7 +5,7 @@ from paystubs.wages import AcmePaystub
 from cc.elan_statement import ElanStatementReader
 from cc.statement import CcStatement
 from cc.visa import MccReader
-from liabilities.timed_liability import TimedLiability, concept_lease
+from liabilities.timed_liability import TimedLiability, real_estate_leases
 from liabilities.static_liability import StaticLiability, education_liabilities
 from property.mac_book import MacBook
 from property.kelly_valuator import ChevyMalibu05Valuator
@@ -19,7 +19,7 @@ class StatementFactory:
     paystub_reader = lambda self, fname: AcmePaystub(AcmePaystubReader(fname).text)
     cc_statement = lambda self, cc_contents, mcc_contents: CcStatement(ElanStatementReader(cc_contents), MccReader(mcc_contents))
     properties: List[object] = field(default_factory=lambda: [MacBook(), ChevyMalibu05Valuator(milage=150000, sell_zip=84102)])
-    timed_liabilities: List[TimedLiability] = field(default_factory=lambda: [concept_lease])
+    timed_liabilities: List[TimedLiability] = field(default_factory=lambda: real_estate_leases)
     static_liabilities: List[StaticLiability] = field(default_factory=lambda: education_liabilities)
 
     def bank(self, contents):
